@@ -48,7 +48,7 @@ navigator.getUserMedia(constraints,(myStream)=>{
 
 	peer.on('signal', (data)=>{
 		//on peer signalled , returns peer id 
-		debug('signal data: ', data);
+		console.log('signal data: ', data);
 		waitForPeer(data);
 	});
 
@@ -63,11 +63,11 @@ navigator.getUserMedia(constraints,(myStream)=>{
 	});
 
 	peer.on('connect',()=>{
-		debug('peer connection established');
+		console.log('peer connection established');
 	});
 
 	peer.on('error', err=>{
-		debug('peer error: ',err);
+		console.log('peer error: ',err);
 	});
 
 
