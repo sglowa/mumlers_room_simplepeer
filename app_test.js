@@ -2,6 +2,7 @@ const fs = require('fs');
 const express = require('express');
 const httpolyglot = require('httpolyglot');
 const pug = require('pug');
+const path = require('path');
 let io = require('socket.io');
 //ech just checking instead og polyglot 
 // const https = require('https');
