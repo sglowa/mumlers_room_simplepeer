@@ -6,7 +6,7 @@
   "scripts": {
     "start": "browserify index2.js -o ./public/bundle.js; node app",
     "startlocal": "browserify index2.js -o ./public/bundle.js; node --inspect-brk app_local",
-    "startdev": "watchify index2.js -o ./public/bundle.js & node app"
+    "start_remote_test": "browserify index.js -o ./public/bundle.js & node app_test"
   },
   "author": "psinka",
   "license": "ISC",
