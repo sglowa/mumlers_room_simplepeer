@@ -1,0 +1,21 @@
+doctype html
+html
+	head
+		meta(charset='utf-8')
+		title Mumler
+		link(rel='stylesheet' type='text/css' href='css/style.css')
+	body
+		h1 this comes from pug!
+		div.connection(isConnected='false')
+		label(for="") Enter your message
+		br
+		textarea#yourMessage
+		button#send send
+		br
+		pre#messages
+		br
+		script(src="https://cdn.polyfill.io/v3/polyfill.min.js?features=console,document,JSON")
+		script(src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js")
+		script(src="/socket.io/socket.io.js")
+		script(src="bundle.js" charset="utf-8")
+

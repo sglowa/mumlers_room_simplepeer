@@ -1,0 +1,31 @@
+{
+  "name": "mumlers_app_p2p",
+  "version": "1.0.0",
+  "description": "a spirit infused p2p videochat savouring the distance and tech that collapses it",
+  "main": "app.js",
+  "scripts": {
+    "start": "browserify index2.js -o ./public/bundle.js; node app",
+    "startlocal": "browserify index2.js -o ./public/bundle.js; node --inspect-brk app_local",
+    "startdev": "watchify index2.js -o ./public/bundle.js & node app"
+  },
+  "author": "psinka",
+  "license": "ISC",
+  "devDependencies": {
+    "browser-sync": "^2.26.7",
+    "budo": "^11.6.3",
+    "eslint": "^7.2.0",
+    "nodemon": "^2.0.4",
+    "watchify": "^3.11.1"
+  },
+  "dependencies": {
+    "browserify": "^16.5.2",
+    "getusermedia": "^2.0.1",
+    "httpolyglot": "^0.1.2",
+    "peer": "^0.5.3",
+    "peerjs": "^1.3.1",
+    "pug": "^3.0.0",
+    "socket.io": "^2.3.0",
+    "validator": "^13.1.17",
+    "videocontext": "^0.54.0"
+  }
+}
