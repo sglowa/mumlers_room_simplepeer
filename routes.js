@@ -2,7 +2,7 @@
 const path = require('path');
 const express = require('express');
 const pug = require('pug');
-const peer_rooms = require('./peer_rooms.js');
+// const peer_rooms = require('./peer_rooms.js');
 
 module.exports = (app) => {
 	// public is enough, since everything else is bundled by browserify 
@@ -20,23 +20,24 @@ module.exports = (app) => {
 		res.send(pug.renderFile('views/form.pug'));		
 	});
 
-	app.post('/newRoom',(req,res)=>{		
-		const roomName = req.body.data.input;
-		const socket_id = req.body.data.socket_id;
-		// ▼▼ checking if name ok, if so creating room ▼▼
-		const result = peer_rooms.checkRoom(roomName); //checking
-		res.send(result);
-		if(result.isAccepted||result.isTaken===false) new peer_rooms.Room(roomName,socket_id); //creating		
-		return;
-	});
+	// join/create room via 'POST'
+	// app.post('/newRoom',(req,res)=>{		
+	// 	const roomName = req.body.data.input;
+	// 	const socket_id = req.body.data.socket_id;
+	// 	// ▼▼ checking if name ok, if so creating room ▼▼
+	// 	const result = peer_rooms.checkRoom(roomName); //checking
+	// 	res.send(result);
+	// 	if(result.isAccepted||result.isTaken===false) new peer_rooms.Room(roomName,socket_id); //creating		
+	// 	return;
+	// });
 
-	app.post('/joinRoom',(req,res)=>{
-		const roomName = req.body.data.input;
-		const socket_id = req.body.data.socket_id;
-		// ▼▼ checking if name ok and room present, if so joining ▼▼
-		const result = peer_rooms.checkRoom(roomName);
-		res.send(result);
-		if(result.isAccepted||result.isTaken===true) peer_rooms.joinRoom(roomName,socket_id);
-		return;
-	});
+	// app.post('/joinRoom',(req,res)=>{
+	// 	const roomName = req.body.data.input;
+	// 	const socket_id = req.body.data.socket_id;
+	// 	// ▼▼ checking if name ok and room present, if so joining ▼▼
+	// 	const result = peer_rooms.checkRoom(roomName);
+	// 	res.send(result);
+	// 	if(result.isAccepted||result.isTaken===true) peer_rooms.joinRoom(roomName,socket_id);
+	// 	return;
+	// });
 };

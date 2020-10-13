@@ -1,24 +1,15 @@
 /*jshint esversion:6*/
 const fs = require('fs');
 const express = require('express');
-const httpolyglot = require('httpolyglot');
+const http = require('http');
 const pug = require('pug');
 const path = require('path');
 let io = require('socket.io');
 const app = express();
-const privateKey = fs.readFileSync('/etc/letsencrypt/live/justfornow.ml/privkey.pem', 'utf8');
-const certificate = fs.readFileSync('/etc/letsencrypt/live/justfornow.ml/cert.pem', 'utf8');
-const ca = fs.readFileSync('/etc/letsencrypt/live/justfornow.ml/chain.pem', 'utf8');
-const credentials = {
-	key: privateKey,
-	cert: certificate,
-	ca: ca
-};
 const port = process.env.PORT || 8080;
 require('./routes.js')(app);
-
-const httpsServer = httpolyglot.createServer(credentials,app);
-httpsServer.listen(port, ()=>{
+const httpServer = http.createServer(app);
+httpServer.listen(port, ()=>{
 	console.log('listening on port 8080 !');
 });
 
@@ -57,7 +48,7 @@ httpsServer.listen(port, ()=>{
 // httpreq.end(console.log('request ended'));
 // ⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤
 
-io = io(httpsServer);
+io = io(httpServer);
 const signalling_b = require('./signalling_back.js')
 signalling_b(io);
 
