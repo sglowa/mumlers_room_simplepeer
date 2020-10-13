@@ -72,6 +72,19 @@ module.exports = (socket,peersRef,camStream)=>{
 			console.log('peer closed');
 		});
 	});
+	//for debugging 
+	window.handleStream = {
+	camFeedA_stream,
+	camFeedA_track,
+	camFeedA_vid,
+	camFeedB_vid,
+	camFeed_cnv,
+	camFeed_vc,
+	camFeedComp_stream,
+	camFeedComp_track,
+	scene_cnv,
+	scene_vc
+	};
 };
 
 function setCamFeed_vc(vc,cnv,vidA,vidB){
