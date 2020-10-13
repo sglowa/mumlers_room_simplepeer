@@ -104,11 +104,11 @@ module.exports = (socket)=>{
 			isConnected = true;
 		});
 
-		peer.on('stream',()=>{
+		peer.on('stream',stream=>{
+			if(peer._remoteStreams.length>1) return;
 			const peerId = peersRef.array.find(p=>p.peer==peer).peerId;
 			socket.emit('receiving stream',{peerId,stream});
 			console.log('receiving stream',stream);
-
 		});
 
 		peer.on('error',err=>console.error(err));

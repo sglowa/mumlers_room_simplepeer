@@ -29,46 +29,45 @@ module.exports = (socket,peersRef,camStream)=>{
 		const placeholder_track = streamOutgoing.getVideoTracks()[0];
 		peer.replaceTrack(placeholder_track,camFeedComp_track,streamOutgoing);
 
+		peer.on('stream',stream=>{
+			if(stream.id == camFeedA_stream.id){
+				camFeedB_vid.srcObject = stream;
+				camFeedB_vid.play();
+				setCamFeed_vc(camFeed_vc,camFeed_cnv,camFeedA_vid,camFeedB_vid);
+			}else{
+				peer.addStream(stream);
+			}
+		});
+
 		if(callData.nextUser !== partnerNext && partnerNext != socket.id){
 			if(partnerNext){ // only if there was already a partner
 				const oldPartnerNext = peersRef.array.find(p=>p.peerId == partnerNext);
-				const streamOutgoingOldPartnerNext = oldParnterNext.peer.streams[0];
-				oldPartnerNext.peer.removeTrack(camFeedA_track,streamOutgoingOldPartnerNext);	
+				oldPartnerNext.peer.removeStream(camFeedA_stream);	
 			}			
 			const newPartnerNext = peersRef.array.find(p=>p.peerId == callData.nextUser);
-			const streamOutgoingNewPartner = newPartnerNext.peer.streams[0];
-			newPartnerNext.peer.addTrack(camFeedA_track,streamOutgoingNewPartner);
-		}
-	/*	if(callData.prevUser !== partnerPrev){
-			const oldPartnerPrev = peersRef.array.find(p=>p.peerId == partnerPrev);
-			const streamOutgoingOldPartnerPrev = oldPartnerPrev.peer.streams[0];
-			const camFeedPartner_track = streamOutgoingOldPartnerPrev.getVideoTracks()
-				.find(t=> !(t instanceof CanvasCaptureMediaStreamTrack));
-			oldPartnerPrev.peer.removeTrack(camFeedPartner_track,streamOutgoingOldPartnerPrev);	
-		} // seems unnecessary since the track is also being removed on oldPrevPartner's side ? ? */
+			newPartnerNext.peer.addStream(camFeedA_stream);
+		} // ^^ built for track event	
 		partnerNext = callData.nextUser;
 		partnerPrev = callData.prevUser;
 
-		peer.on('track',(track,stream)=>{
-			peer.removeAllListeners('track');
-			peer.on('track',(track,stream)=>{
-				camFeedB_vid.srcObject = new MediaStream([track]);
-				camFeedB_vid.play();
-				setCamFeed_vc(camFeed_vc,camFeed_cnv,camFeedA_vid,camFeedB_vid);
-			});
-			peer.addTrack(track,peer.streams[0]);
-		});
+	// //	if(callData.nextUser !== partnerNext && partnerNext != socket.id){
+	// 		if(partnerNext){ // only if there was already a partner
+	// 			const oldPartnerNext = peersRef.array.find(p=>p.peerId == partnerNext);
+	// 			const streamOutgoingOldPartnerNext = oldParnterNext.peer.streams[0];
+	// 			oldPartnerNext.peer.removeTrack(camFeedA_track,streamOutgoingOldPartnerNext);	
+	// 		}			
+	// 		const newPartnerNext = peersRef.array.find(p=>p.peerId == callData.nextUser);
+	// 		const streamOutgoingNewPartner = newPartnerNext.peer.streams[0];
+	// 		newPartnerNext.peer.addTrack(camFeedA_track,streamOutgoingNewPartner);
+	// //	} ^^ built for track event
+	// //	if(callData.prevUser !== partnerPrev){
+	// 		const oldPartnerPrev = peersRef.array.find(p=>p.peerId == partnerPrev);
+	// 		const streamOutgoingOldPartnerPrev = oldPartnerPrev.peer.streams[0];
+	// 		const camFeedPartner_track = streamOutgoingOldPartnerPrev.getVideoTracks()
+	// 			.find(t=> !(t instanceof CanvasCaptureMediaStreamTrack));
+	// 		oldPartnerPrev.peer.removeTrack(camFeedPartner_track,streamOutgoingOldPartnerPrev);	
+	// //	} // seems unnecessary since the track is also being removed on oldPrevPartner's side ? ? << old partnerHandling (with track event);
 
-		// peer.on('track',(track,stream)=>{
-		// 		const peerNext = peersRef.array.find(p=>p.peerId==partnerNext).peer;				
-		// 		if(stream.id == peerNext._remoteStreams[0].id){ // received stream is mine, after bounce
-		// 			peer.addTrack(track,streamOutgoing);
-		// 		}else{
-		// 			camFeedB_vid.srcObject = new MediaStream([track]);
-		// 			camFeedB_vid.play();
-		// 			setCamFeed_vc(camFeed_vc,camFeed_cnv,camFeedA_vid,camFeedB_vid);
-		// 		}
-		// });
 		peer.on('close',()=>{
 			// again i only need to re-establish the next partner;
 			console.log('peer closed');
@@ -13204,11 +13203,11 @@ module.exports = (socket)=>{
 			isConnected = true;
 		});
 
-		peer.on('stream',()=>{
+		peer.on('stream',stream=>{
+			if(peer._remoteStreams.length>1) return;
 			const peerId = peersRef.array.find(p=>p.peer==peer).peerId;
 			socket.emit('receiving stream',{peerId,stream});
 			console.log('receiving stream',stream);
-
 		});
 
 		peer.on('error',err=>console.error(err));
