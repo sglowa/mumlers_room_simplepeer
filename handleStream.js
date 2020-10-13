@@ -49,15 +49,25 @@ module.exports = (socket,peersRef,camStream)=>{
 		partnerPrev = callData.prevUser;
 
 		peer.on('track',(track,stream)=>{
-				const peerNext = peersRef.array.find(p=>p.peerId==partnerNext).peer;				
-				if(stream.id == peerNext.streams[0].id){ // received stream is mine, after bounce
-					camFeedB_vid.srcObject = new MediaStream([track]);
-					camFeedB_vid.play();
-					setCamFeed_vc(camFeed_vc,camFeed_cnv,camFeedA_vid,camFeedB_vid);
-				}else{
-					peer.addTrack(track,streamOutgoing);
-				}
+			peer.removeAllListeners('track');
+			peer.on('track',(track,stream)=>{
+				camFeedB_vid.srcObject = new MediaStream([track]);
+				camFeedB_vid.play();
+				setCamFeed_vc(camFeed_vc,camFeed_cnv,camFeedA_vid,camFeedB_vid);
+			});
+			peer.addTrack(track,peer.streams[0]);
 		});
+
+		// peer.on('track',(track,stream)=>{
+		// 		const peerNext = peersRef.array.find(p=>p.peerId==partnerNext).peer;				
+		// 		if(stream.id == peerNext._remoteStreams[0].id){ // received stream is mine, after bounce
+		// 			peer.addTrack(track,streamOutgoing);
+		// 		}else{
+		// 			camFeedB_vid.srcObject = new MediaStream([track]);
+		// 			camFeedB_vid.play();
+		// 			setCamFeed_vc(camFeed_vc,camFeed_cnv,camFeedA_vid,camFeedB_vid);
+		// 		}
+		// });
 		peer.on('close',()=>{
 			// again i only need to re-establish the next partner;
 			console.log('peer closed');
