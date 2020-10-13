@@ -84,17 +84,21 @@ module.exports = (io)=>{
 
 function getPrevUser(memberId){
 	const name = socketToRoom[memberId];
-	const member_i = rooms[name].indexOf(memberId);
-	let partner_i = member_i - 1;
-	partner_i = partner_i%rooms[name].length;
-	partner_i = partner_i < 0 ? partner_i + rooms[name].length : partner_i;
-	return rooms[name][partner_i]; 
+	if(rooms[name]){
+		const member_i = rooms[name].indexOf(memberId);
+		let partner_i = member_i - 1;
+		partner_i = partner_i%rooms[name].length;
+		partner_i = partner_i < 0 ? partner_i + rooms[name].length : partner_i;
+		return rooms[name][partner_i]; 	
+	}
 } // -> PrevUserId
 
 function getNextUser(memberId){
 	const name = socketToRoom[memberId];
-	const member_i = rooms[name].indexOf(memberId);
-	let partner_i = member_i + 1;
-	partner_i = partner_i%rooms[name].length;
-	return rooms[name][partner_i];
+	if (rooms[name]) {
+		const member_i = rooms[name].indexOf(memberId);
+		let partner_i = member_i + 1;
+		partner_i = partner_i%rooms[name].length;
+		return rooms[name][partner_i];
+	}
 } // -> NextUserId
