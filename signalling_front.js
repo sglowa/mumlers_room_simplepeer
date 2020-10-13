@@ -88,27 +88,48 @@ module.exports = (socket)=>{
 			iceTransportPolicy: 'relay',
 			stream,  
 		});
-		let isConnected = false;
+
+		// let isConnected = false;
+
+		const waitConnection = ()=>{
+			return new Promise((resolve,reject)=>{
+				peer.on('connect',()=>{
+					console.log('peer connected');
+					resolve(true);
+				});
+				setTimeout(()=>{
+					reject("couldn't establish connection");
+				},6000);
+			});
+		};
+
+		let isConnected = waitConnection().then(r=>isConnected = r);
+		console.log(isConnected);
 		peer.on('signal', signal=>{
 			console.debug('got the offer', signal);
 			// const peer = peersRef.array.find(p=>p.peerId==userToSignal); // checking if peer already exists
-			if(isConnected){
+			if(isConnected==true){
 				socket.emit('caller renegotiating', {userToSignal,callerId, signal});
 				return;
 			}
 			socket.emit('sending signal', {userToSignal, callerId, signal}); // we send the signal to server & server passes the signal to specified remote user (via socket); 
 		});		
 
-		peer.on('connect',()=>{
-			console.debug('peer connection is ready',peer);
-			isConnected = true;
-		});
+		// peer.on('connect',()=>{
+		// 	console.debug('peer connection is ready',peer);
+		// 	isConnected = true;
+		// });
 
-		peer.on('stream',stream=>{
+		peer.on('stream',async stream=>{
 			if(peer._remoteStreams.length>1) return;
-			const peerId = peersRef.array.find(p=>p.peer==peer).peerId;
-			socket.emit('receiving stream',{peerId,stream});
-			console.log('receiving stream',stream);
+			try{
+				await isConnected;
+				const peerId = peersRef.array.find(p=>p.peer==peer).peerId;
+				socket.emit('receiving stream',{peerId,stream});
+				console.log('receiving stream',stream);
+			}catch(err){
+				console.log(err);
+			}			
 		});
 
 		peer.on('error',err=>console.error(err));
@@ -124,16 +145,30 @@ module.exports = (socket)=>{
 			iceTransportPolicy: 'relay',
 			stream,		
 		});
-		let isConnected = false;
+		// let isConnected = false;
+
+		const waitConnection = ()=>{
+			return new Promise((resolve,reject)=>{
+				peer.on('connect',()=>{
+					console.log('peer connected');
+					resolve(true);
+				});
+				setTimeout(()=>{
+					reject("couldn't establish connection");
+				},6000);
+			});
+		};
+
+		let isConnected = waitConnection().then(r=>isConnected = r);
+		console.log(isConnected);
 		// 2. firing 'signal' event
 		peer.on('signal', signal=>{ // triggered when remote peer is signaling with offer, sending answer signal back
 			// const peer = peersRef.array.find(p=>p.peerId==callerId);
-			if(isConnected){
+			if(isConnected==true){
 				socket.emit('receiver renegotiating',{callerId, signal});
 				return;
 			} // checking if peer already exists
 			socket.emit('returning signal',{signal,callerId});
-			console.debug('got the answer', signal);
 		});
 		// 1. called first
 
@@ -143,16 +178,21 @@ module.exports = (socket)=>{
 
 		peer.signal(incomingSignal); 
 
-		peer.on('connect',()=>{
-			isConnected = true;
-			console.debug('peer connection is ready',peer);			
-		});
+		// peer.on('connect',()=>{
+		// 	isConnected = true;
+		// 	console.debug('peer connection is ready',peer);			
+		// });
 
-		peer.on('stream',stream=>{
+		peer.on('stream',async stream=>{
 			if(peer._remoteStreams.length>1) return;
-			const peerId = peersRef.array.find(p=>p.peer==peer).peerId;
-			socket.emit('receiving stream',{peerId,stream});
-			console.log('receiving stream',stream);
+			try{
+				await isConnected;
+				const peerId = peersRef.array.find(p=>p.peer==peer).peerId;
+				socket.emit('receiving stream',{peerId,stream});
+				console.log('receiving stream',stream);
+			}catch(err){
+				console.log(err);
+			}		
 		});
 
 		peer.on('close',()=>{
