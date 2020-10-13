@@ -50,7 +50,7 @@ module.exports = (socket,peersRef,camStream)=>{
 
 		peer.on('track',(track,stream)=>{
 				const peerNext = peersRef.array.find(p=>p.peerId==partnerNext).peer;				
-				if(stream.id == peerNext._remoteStreams[0].id){ // received stream is mine, after bounce
+				if(stream.id == peerNext.streams[0].id){ // received stream is mine, after bounce
 					camFeedB_vid.srcObject = new MediaStream([track]);
 					camFeedB_vid.play();
 					setCamFeed_vc(camFeed_vc,camFeed_cnv,camFeedA_vid,camFeedB_vid);
