@@ -1,6 +1,10 @@
 /*jshint esversion:6*/
 
+module.exports = (signalClient,peer)=>{
+	console.log('handleStreams called for peer:',peer,signalClient);
+};
 
+/*red
 module.exports = (socket,peersRef,camStream)=>{
 
 	let partnerPrev;
@@ -86,6 +90,7 @@ module.exports = (socket,peersRef,camStream)=>{
 	scene_vc
 	};
 };
+red*/
 
 function setCamFeed_vc(vc,cnv,vidA,vidB){
 	cnv.width = vidA.videoWidth;

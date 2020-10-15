@@ -14,6 +14,12 @@ const parseHtmlRes = (html)=>{
 // };
 
 module.exports = (socket)=>{
+
+	let resolvePromise;
+	const promise = new Promise((resolve,reject)=>{
+		resolvePromise = resolve;
+	});
+
 	let formHtml = helpers.httpGet('./form');
 	formHtml = parseHtmlRes(formHtml);
 	document.body.prepend(formHtml);
@@ -40,22 +46,33 @@ module.exports = (socket)=>{
 		let message;
 		switch(res.purpose){
 			case 'join' :
-				if(res.roomExists){							
-					socket.emit('join room',val);
-					message = 'room joined';
-					formHtml.parentNode.removeChild(formHtml);
-				}else{message = "room doesn't exist";}
-				alert(message);
+				if(!res.roomExists){
+					message = "room doesn't exist";
+					break;
+				}
+				if(res.isFull){
+					message = "room is full";
+					break;
+				}
+				message = "room joined";
+				// socket.emit('join room',val);
+				resolvePromise(val); //red
+				formHtml.parentNode.removeChild(formHtml);
 				break;
 			case 'open' :
-				if(!res.roomExists){							
-					socket.emit('join room',val);
-					message = 'room created';
-					formHtml.parentNode.removeChild(formHtml);
-				}else{message = "room already exist";}
-				alert(message);
+				if(res.roomExists){
+					message = "room already exist";
+					break;
+				}
+				message = 'room created';
+				// socket.emit('join room',val);
+				resolvePromise(val); //red
+				formHtml.parentNode.removeChild(formHtml);
 				break;
-		}	
+		}
+		alert(message);	
 	});	
+
+	return promise;
 };
 	

@@ -5,6 +5,8 @@ const rooms = {}; //collection of all rooms , {roomId:[...],roomId:[...],roomId:
 const socketToRoom = {}; //collection of all sockets, {socketId:roomId,socketId:roomId}
 
 module.exports = (io)=>{
+	const signalServer = require('simple-signal-server')(io);
+
 	io.on('connection', socket => {
 		// console.debug('socket connected',socket);
 
@@ -17,47 +19,44 @@ module.exports = (io)=>{
 				return;
 			}
 			const roomExists = rooms[name] ? true : false;
-			socket.emit('check room result',{roomExists,purpose});
+			const isFull = roomExists ? rooms[name].length == 6 ? true : false : false;
+			socket.emit('check room result',{roomExists,isFull,purpose});
 			return;
 		});
 
-		socket.on('join room',name=>{
-			if(rooms[name]){ // if room already exists
-				const length = rooms[name].length;
-				if(length === 4){
-					socket.emit('room full');
-					return;		
-				} // ^^ is room full ?
-				rooms[name].push(socket.id); // << add to existing room's array
-			}else{
-				rooms[name]=[socket.id]; // create roomId : [creator] entry in rooms collection
+		signalServer.on('discover',request=>{
+			const roomName = request.discoveryData;
+			if(rooms[roomName]){
+				rooms[roomName].add(request.socket.id);
+			}else{rooms[roomName] = new Set([request.socket.id]);}
+			const members = [];
+			rooms[roomName].forEach(id=>{
+				if(id!==request.socket.id)members.push(id);
+			});
+			socketToRoom[request.socket.id] = roomName;
+			request.discover({roomName,members});
+		});
+		
+		 
+		 //#00ff00#00ff00
+		signalServer.on('request', request=>{
+			console.log('forwarding request',request);
+			request.forward();
+		});
+		 //#00ff00#00ff00
+		
+
+		signalServer.on('disconnect',socket=>{
+			console.log('peer disconnected');
+			const client = socket.id;
+			const roomName = socketToRoom[socket.id];
+			if(rooms[roomName]){
+				rooms[roomName].delete(socket.id);
+				if(rooms[roomName].size==0) delete rooms[roomName];
 			}
-			socketToRoom[socket.id]=name; // add to sockets collection
-			const usersInThisRoom = rooms[name].filter(id => id !== socket.id);
-			// socket.emit('ice config',ice_str);
-			socket.emit('all users',usersInThisRoom); //send room members to joiner (without joiner);			
 		});
 
-		socket.on('sending signal',payload=>{ // emitted by joiner (createPeer fn), carries offer signal
-			const roomMember_id = payload.userToSignal;
-			// io.to(roomMember_id).emit('ice config',ice_str);
-			io.to(roomMember_id).emit('user joined',{signal:payload.signal,callerId:payload.callerId}); // give existin member offer signal and id it comes from
-		});  // ^^ called separately for each room member
-
-		socket.on('returning signal',payload=>{ //emitted by existign member (addPeer fn), carries answer signal
-			io.to(payload.callerId).emit('receiving returned signal',{signal:payload.signal,id:socket.id});
-		}); // ^^ sent to joiner.
-
-		socket.on('caller renegotiating',payload=>{
-			const roomMember_id = payload.userToSignal;
-			io.to(roomMember_id).emit('caller renegotiating signal',{signal:payload.signal,callerId:payload.callerId});
-		});
-
-		socket.on('receiver renegotiating',payload=>{
-			const roomMember_id = payload.callerId;
-			io.to(roomMember_id).emit('receiver renegotiating signal',{signal:payload.signal,id:socket.id});
-		});
-
+		/*yellow
 		socket.on('disconnect',()=>{ // ?? can i also emit this when leaving room ??
 			console.debug('socket disconnected ', socket.id);
 			const roomId = socketToRoom[socket.id]; //get room socket belonged to
@@ -74,6 +73,8 @@ module.exports = (io)=>{
 				});
 			}
 		});// ^^update the room array
+		yellow*/
+
 		socket.on('receiving stream',callData=>{
 			callData.prevUser = getPrevUser(socket.id);
 			callData.nextUser = getNextUser(socket.id);

@@ -21,15 +21,15 @@ const constraints = {
 	}};
 
 navigator.mediaDevices.getUserMedia(constraints)
-	.then(myStream =>{
+	.then(async myStream =>{
 		const  socket = io();
 		socket.on('connect',()=>console.log('socket connected'));
 		const roomForm = require('./roomForm.js');
-		roomForm(socket);
+		const roomName = await roomForm(socket);
 		const signalling_f = require('./signalling_front.js');
-		const peersRef = signalling_f(socket);		
-		const handleStreams = require('./handleStream.js')
-		handleStreams(socket,peersRef,myStream);
+		const handleStreams = require('./handleStream.js');
+		signalling_f(socket,roomName,handleStreams);		
+		// handleStreams(socket,peersRef,myStream);
 
 	}).catch(err=>{
 		console.error(err);

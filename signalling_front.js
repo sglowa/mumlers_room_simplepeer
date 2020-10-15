@@ -2,10 +2,10 @@
 window.getMembers = ()=>{ // for debugging
 	console.log(peersRef);
 };
-const Peer = require('simple-peer');
-const peersRef = {array:[]}; // locally stored array of peers in the room [{peerId:"",peer:{}}]
-// ^^object, to keep reference as it's passed outside of scope
-const stream = require('./helpers.js').makeEmptyStream({width:480,height:320});
+// const Peer = require('simple-peer'); //red
+
+// const peersRef = {array:[]}; // locally stored array of peers in the room [{peerId:"",peer:{}}]
+// ^^object, to keep reference as it's passed outside of scope // #ff0000 < i still need it to associate peer obj with IDs
 
 // viagenie stun/turn config
 // let config  = {'iceServers': [
@@ -30,7 +30,6 @@ let config = {"iceServers" : [
 	       "turns:eu-turn2.xirsys.com:5349?transport=tcp"
 	   	]}
 	]};
-
 // TRYING TO GET CONFIG VIA API, DOESNT WOOORKKK... BUT SHOULD !
 // A PROBLEM WITH HTTPS.REQUEST < socket err
 // socket.on('ice config',ice_str=>{
@@ -41,6 +40,55 @@ let config = {"iceServers" : [
 // 	config = JSON.parse(ice_str);
 // 	console.log(config);
 // });
+//blue
+const stream = require('./helpers.js').makeEmptyStream({width:480,height:320});
+const options = {
+	config,
+	trickle:false,
+	iceTransportPolicy: 'relay',
+	stream
+};
+let currentRoom; 
+const SimpleSignalClient = require('simple-signal-client');
+module.exports = (socket,name,handleStreams)=>{
+	console.log('running signalling front');
+	
+	const signalClient = new SimpleSignalClient(socket);
+	
+//	signalClient.on('discover', async roomIds=>{ red
+//		const {peer} = await signalClient.connect(roomIds[0]);
+//		console.log('caller', peer, signalClient);
+//	}); red
+	async function connectToPeer(peerId){
+		console.log('connecting to peer',signalClient);
+		const {peer} = await signalClient.connect(peerId,currentRoom);
+		console.log('connected to peer', peer);
+		handleStreams(signalClient,peer);
+	}
+
+	function joinRoom(discoveryData){
+		if(discoveryData.roomName == name){
+			console.log(discoveryData);
+			signalClient.removeListener('discover',joinRoom);
+			discoveryData.members.forEach(peerId=>{
+				connectToPeer(peerId);
+			});
+		}
+	}
+	currentRoom = name;
+	signalClient.on('request',async request=>{
+		console.log('connecting to peer',signalClient);
+		const {peer} = await request.accept();
+		console.log('connected to peer', peer);
+		handleStreams(signalClient,peer);
+	});
+	signalClient.addListener('discover',joinRoom);
+	signalClient.discover(name);
+};
+
+//blue
+
+/*yellow
 module.exports = (socket)=>{
 	socket.on('room full',()=>{
 		console.error('the room you are trying to join is full');		
@@ -103,9 +151,9 @@ module.exports = (socket)=>{
 			});
 		};
 
-		let isConnected = waitConnection().then(r=>isConnected = r);
-		console.log(isConnected);
+		let isConnected = waitConnection().then(r=>isConnected = r);		
 		peer.on('signal', signal=>{
+			console.log('caller processing signal, isConnected:',isConnected);
 			console.debug('got the offer', signal);
 			// const peer = peersRef.array.find(p=>p.peerId==userToSignal); // checking if peer already exists
 			if(isConnected==true){
@@ -160,9 +208,9 @@ module.exports = (socket)=>{
 		};
 
 		let isConnected = waitConnection().then(r=>isConnected = r);
-		console.log(isConnected);
 		// 2. firing 'signal' event
 		peer.on('signal', signal=>{ // triggered when remote peer is signaling with offer, sending answer signal back
+			console.log('receiver processing signal, isConnected:',isConnected);
 			// const peer = peersRef.array.find(p=>p.peerId==callerId);
 			if(isConnected==true){
 				socket.emit('receiver renegotiating',{callerId, signal});
@@ -207,3 +255,4 @@ module.exports = (socket)=>{
 
 	return peersRef;
 };
+yellow*/	 // << vanilla signalling (bleh);
