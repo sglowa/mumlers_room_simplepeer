@@ -4,7 +4,7 @@ window.getMembers = ()=>{ // for debugging
 };
 // const Peer = require('simple-peer'); //red
 
-// const peersRef = {array:[]}; // locally stored array of peers in the room [{peerId:"",peer:{}}]
+const peersRef = {array:[]}; // locally stored array of peers in the room [{peerId:"",peer:{}}]
 // ^^object, to keep reference as it's passed outside of scope // #ff0000 < i still need it to associate peer obj with IDs
 
 // viagenie stun/turn config
@@ -41,12 +41,11 @@ let config = {"iceServers" : [
 // 	console.log(config);
 // });
 //blue
-const stream = require('./helpers.js').makeEmptyStream({width:480,height:320});
+// const stream = require('./helpers.js').makeEmptyStream({width:480,height:320});
 const options = {
 	config,
 	trickle:false,
 	iceTransportPolicy: 'relay',
-	stream
 };
 let currentRoom; 
 const SimpleSignalClient = require('simple-signal-client');
@@ -61,7 +60,8 @@ module.exports = (socket,name,handleStreams)=>{
 //	}); red
 	async function connectToPeer(peerId){
 		console.log('connecting to peer',signalClient);
-		const {peer} = await signalClient.connect(peerId,currentRoom);
+		const {peer} = await signalClient.connect(peerId,currentRoom,options); // why am i sending current room ?
+		peersRef.array.push({peer,peerId});
 		console.log('connected to peer', peer);
 		handleStreams(signalClient,peer);
 	}
@@ -78,7 +78,8 @@ module.exports = (socket,name,handleStreams)=>{
 	currentRoom = name;
 	signalClient.on('request',async request=>{
 		console.log('connecting to peer',signalClient);
-		const {peer} = await request.accept();
+		const {peer} = await request.accept(null,options);
+		peersRef.array.push({peer,peerId:request.initiator});
 		console.log('connected to peer', peer);
 		handleStreams(signalClient,peer);
 	});

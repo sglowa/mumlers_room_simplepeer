@@ -36,15 +36,6 @@ module.exports = (io)=>{
 			socketToRoom[request.socket.id] = roomName;
 			request.discover({roomName,members});
 		});
-		
-		 
-		 //#00ff00#00ff00
-		signalServer.on('request', request=>{
-			console.log('forwarding request',request);
-			request.forward();
-		});
-		 //#00ff00#00ff00
-		
 
 		signalServer.on('disconnect',socket=>{
 			console.log('peer disconnected');
@@ -56,50 +47,38 @@ module.exports = (io)=>{
 			}
 		});
 
-		/*yellow
-		socket.on('disconnect',()=>{ // ?? can i also emit this when leaving room ??
-			console.debug('socket disconnected ', socket.id);
-			const roomId = socketToRoom[socket.id]; //get room socket belonged to
-			let room = rooms[roomId]; // get user array of that room 
-			if (room){
-				room = room.filter(id => id !== socket.id);
-				rooms[roomId] = room;
-				if(rooms[roomId].length ==0){
-					delete rooms[roomId];
-					return;
-				}
-				rooms[roomId].forEach(id=>{
-					io.to(id).emit('user left',socket.id);
-				});
-			}
-		});// ^^update the room array
-		yellow*/
+		socket.on('disconnect',()=>{
+			console.log('socket disconnected');
+		});
 
 		socket.on('receiving stream',callData=>{
 			callData.prevUser = getPrevUser(socket.id);
 			callData.nextUser = getNextUser(socket.id);
 			socket.emit('handle new stream',callData);
 		});
+
 	});
 };
 
 function getPrevUser(memberId){
 	const name = socketToRoom[memberId];
 	if(rooms[name]){
-		const member_i = rooms[name].indexOf(memberId);
+		const room = Array.from(rooms[name]);
+		const member_i = room.indexOf(memberId);
 		let partner_i = member_i - 1;
-		partner_i = partner_i%rooms[name].length;
-		partner_i = partner_i < 0 ? partner_i + rooms[name].length : partner_i;
-		return rooms[name][partner_i]; 	
+		partner_i = partner_i%room.length;
+		partner_i = partner_i < 0 ? partner_i + room.length : partner_i;
+		return room[partner_i]; 	
 	}
 } // -> PrevUserId
 
 function getNextUser(memberId){
 	const name = socketToRoom[memberId];
 	if (rooms[name]) {
-		const member_i = rooms[name].indexOf(memberId);
+		const room = Array.from(rooms[name]);
+		const member_i = room.indexOf(memberId);
 		let partner_i = member_i + 1;
-		partner_i = partner_i%rooms[name].length;
-		return rooms[name][partner_i];
+		partner_i = partner_i%room.length;
+		return room[partner_i];
 	}
 } // -> NextUserId
