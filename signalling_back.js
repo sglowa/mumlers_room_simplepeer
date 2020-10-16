@@ -1,8 +1,8 @@
 /*jshint esversion:6*/
 const validateInput = require('./helpers.js').validateInput;
 const sanitizeInput = require('./helpers.js').sanitizeInput;
-const rooms = {}; //collection of all rooms , {roomId:[...],roomId:[...],roomId:[...]} 
-const socketToRoom = {}; //collection of all sockets, {socketId:roomId,socketId:roomId}
+const rooms = {}; //collection of all rooms , {roomId:[socketId], ...} 
+const socketToRoom = {}; //collection of all sockets, {socketId:roomId, ...}
 
 module.exports = (io)=>{
 	const signalServer = require('simple-signal-server')(io);
@@ -51,6 +51,11 @@ module.exports = (io)=>{
 			console.log('socket disconnected');
 		});
 
+		socket.on('getNextPartner',()=>{
+			const nextPartnerId = getNextUser(socket.id);
+			socket.emit('nextPartner',nextPartnerId);
+		});
+
 		socket.on('receiving stream',callData=>{
 			callData.prevUser = getPrevUser(socket.id);
 			callData.nextUser = getNextUser(socket.id);
@@ -70,7 +75,7 @@ function getPrevUser(memberId){
 		partner_i = partner_i < 0 ? partner_i + room.length : partner_i;
 		return room[partner_i]; 	
 	}
-} // -> PrevUserId
+} // returns PrevUserId
 
 function getNextUser(memberId){
 	const name = socketToRoom[memberId];
@@ -81,4 +86,4 @@ function getNextUser(memberId){
 		partner_i = partner_i%room.length;
 		return room[partner_i];
 	}
-} // -> NextUserId
+} // returns NextUserId

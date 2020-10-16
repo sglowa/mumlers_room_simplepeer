@@ -24,11 +24,11 @@ navigator.mediaDevices.getUserMedia(constraints)
 	.then(async myStream =>{
 		const  socket = io();
 		socket.on('connect',()=>console.log('socket connected'));
-		const roomForm = require('./roomForm.js');
+		const roomForm = require('./roomForm.js');			
 		const roomName = await roomForm(socket);
 		const signalling_f = require('./signalling_front.js');
 		const handleStreams = require('./handleStream.js');
-		signalling_f(socket,roomName,handleStreams);		
+		signalling_f(socket,roomName,myStream,handleStreams);		
 		// handleStreams(socket,peersRef,myStream);
 
 	}).catch(err=>{

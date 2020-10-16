@@ -2,10 +2,8 @@
 window.getMembers = ()=>{ // for debugging
 	console.log(peersRef);
 };
-// const Peer = require('simple-peer'); //red
 
 const peersRef = {array:[]}; // locally stored array of peers in the room [{peerId:"",peer:{}}]
-// ^^object, to keep reference as it's passed outside of scope // #ff0000 < i still need it to associate peer obj with IDs
 
 // viagenie stun/turn config
 // let config  = {'iceServers': [
@@ -39,9 +37,7 @@ let config = {"iceServers" : [
 // 	}
 // 	config = JSON.parse(ice_str);
 // 	console.log(config);
-// });
-//blue
-// const stream = require('./helpers.js').makeEmptyStream({width:480,height:320});
+// }); //xirsys api << 
 const options = {
 	config,
 	trickle:false,
@@ -49,21 +45,17 @@ const options = {
 };
 let currentRoom; 
 const SimpleSignalClient = require('simple-signal-client');
-module.exports = (socket,name,handleStreams)=>{
+module.exports = (socket,name,myStream,handleStreams)=>{
 	console.log('running signalling front');
 	
 	const signalClient = new SimpleSignalClient(socket);
 	
-//	signalClient.on('discover', async roomIds=>{ red
-//		const {peer} = await signalClient.connect(roomIds[0]);
-//		console.log('caller', peer, signalClient);
-//	}); red
 	async function connectToPeer(peerId){
 		console.log('connecting to peer',signalClient);
 		const {peer} = await signalClient.connect(peerId,currentRoom,options); // why am i sending current room ?
 		peersRef.array.push({peer,peerId});
 		console.log('connected to peer', peer);
-		handleStreams(signalClient,peer);
+		handleStreams(signalClient,peer,peersRef,myStream);
 	}
 
 	function joinRoom(discoveryData){
@@ -81,179 +73,8 @@ module.exports = (socket,name,handleStreams)=>{
 		const {peer} = await request.accept(null,options);
 		peersRef.array.push({peer,peerId:request.initiator});
 		console.log('connected to peer', peer);
-		handleStreams(signalClient,peer);
+		handleStreams(signalClient,peer,peersRef,myStream);
 	});
 	signalClient.addListener('discover',joinRoom);
 	signalClient.discover(name);
 };
-
-//blue
-
-/*yellow
-module.exports = (socket)=>{
-	socket.on('room full',()=>{
-		console.error('the room you are trying to join is full');		
-	});
-	socket.on('all users',(users)=>{ // < me joining ...
-		const peers = []; // this one is for media rendering on client side
-		users.forEach(userId=>{ // !! << skipped when 1 user in room (users array empty)
-			const peer = createPeer(userId,socket.id,stream); // yourID myID mySTREAM
-			peersRef.array.push({
-				peerId:userId, //we make peer id same as socket id (remote peer, remote socket)
-				peer // < the actual peer object
-			});
-			peers.push(peer); 	// << this is for rendering client side			
-		});		
-	});
-
-	socket.on('user joined',(payload)=>{ // < i'm already in, someone else joins ... 
-		const peer = addPeer(payload.signal,payload.callerId,stream); //signal object from remote, remote user id, my stream
-		peersRef.array.push({
-			peerId:payload.callerId,
-			peer
-		});
-	});
-
-	socket.on('receiving returned signal',payload=>{ // < JOINER returning signal :: answer signal
-		const item = peersRef.array.find(p=>p.peerId === payload.id); // finding the peer we are receiving an answer from
-		item.peer.signal(payload.signal);
-	});
-
-	socket.on('receiver renegotiating signal',payload=>{
-		const item = peersRef.array.find(p=>p.peerId === payload.id); // finding the peer we are receiving an answer from	
-		item.peer.signal(payload.signal);
-	});
-
-	socket.on('user left',(userId)=>{
-		peersRef.array = peersRef.array.filter(user=>user.peerId!=userId);
-	});
-
-	//called by joiner. 
-	function createPeer(userToSignal, callerId, stream){ // << called by joiner
-		const peer = new Peer({
-			config,
-			initiator:true, // << because the entering user needs to let other know she joined
-			trickle:false,
-			iceTransportPolicy: 'relay',
-			stream,  
-		});
-
-		// let isConnected = false;
-
-		const waitConnection = ()=>{
-			return new Promise((resolve,reject)=>{
-				peer.on('connect',()=>{
-					console.log('peer connected');
-					resolve(true);
-				});
-				setTimeout(()=>{
-					reject("couldn't establish connection");
-				},6000);
-			});
-		};
-
-		let isConnected = waitConnection().then(r=>isConnected = r);		
-		peer.on('signal', signal=>{
-			console.log('caller processing signal, isConnected:',isConnected);
-			console.debug('got the offer', signal);
-			// const peer = peersRef.array.find(p=>p.peerId==userToSignal); // checking if peer already exists
-			if(isConnected==true){
-				socket.emit('caller renegotiating', {userToSignal,callerId, signal});
-				return;
-			}
-			socket.emit('sending signal', {userToSignal, callerId, signal}); // we send the signal to server & server passes the signal to specified remote user (via socket); 
-		});		
-
-		// peer.on('connect',()=>{
-		// 	console.debug('peer connection is ready',peer);
-		// 	isConnected = true;
-		// });
-
-		peer.on('stream',async stream=>{
-			if(peer._remoteStreams.length>1) return;
-			try{
-				await isConnected;
-				const peerId = peersRef.array.find(p=>p.peer==peer).peerId;
-				socket.emit('receiving stream',{peerId,stream});
-				console.log('receiving stream',stream);
-			}catch(err){
-				console.log(err);
-			}			
-		});
-
-		peer.on('error',err=>console.error(err));
-		return peer;
-	}
-
-	//called by member.
-	function addPeer(incomingSignal, callerId, stream){ // << called by existing member
-		const peer = new Peer({
-			config,
-			initiator:false,
-			trickle:false,
-			iceTransportPolicy: 'relay',
-			stream,		
-		});
-		// let isConnected = false;
-
-		const waitConnection = ()=>{
-			return new Promise((resolve,reject)=>{
-				peer.on('connect',()=>{
-					console.log('peer connected');
-					resolve(true);
-				});
-				setTimeout(()=>{
-					reject("couldn't establish connection");
-				},6000);
-			});
-		};
-
-		let isConnected = waitConnection().then(r=>isConnected = r);
-		// 2. firing 'signal' event
-		peer.on('signal', signal=>{ // triggered when remote peer is signaling with offer, sending answer signal back
-			console.log('receiver processing signal, isConnected:',isConnected);
-			// const peer = peersRef.array.find(p=>p.peerId==callerId);
-			if(isConnected==true){
-				socket.emit('receiver renegotiating',{callerId, signal});
-				return;
-			} // checking if peer already exists
-			socket.emit('returning signal',{signal,callerId});
-		});
-		// 1. called first
-
-		socket.on('caller renegotiating signal',payload=>{
-			peer.signal(payload.signal);
-		});
-
-		peer.signal(incomingSignal); 
-
-		// peer.on('connect',()=>{
-		// 	isConnected = true;
-		// 	console.debug('peer connection is ready',peer);			
-		// });
-
-		peer.on('stream',async stream=>{
-			if(peer._remoteStreams.length>1) return;
-			try{
-				await isConnected;
-				const peerId = peersRef.array.find(p=>p.peer==peer).peerId;
-				socket.emit('receiving stream',{peerId,stream});
-				console.log('receiving stream',stream);
-			}catch(err){
-				console.log(err);
-			}		
-		});
-
-		peer.on('close',()=>{
-			const peerId = peersRef.array.find(p=>p.peer==peer).peerId;
-			socket.emit('peer left',peerId);
-		});
-
-		peer.on('error',err=>console.error(err));
-
-		return peer;
-	}
-
-	return peersRef;
-};
-yellow*/	 // << vanilla signalling (bleh);

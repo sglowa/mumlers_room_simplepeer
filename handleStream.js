@@ -1,14 +1,89 @@
 /*jshint esversion:6*/
 
-module.exports = (signalClient,peer)=>{
-	console.log('handleStreams called for peer:',peer,signalClient);
+const camFeedB_vid = document.createElement('video');	
+const camFeed_cnv = document.createElement('canvas');
+const camFeed_vc = new VideoContext(camFeed_cnv);
+const camFeedComp_stream = camFeed_cnv.captureStream();
+// const camFeedComp_track = camFeedComp_stream.getVideoTracks()[0];
+const scene_cnv = document.querySelector('canvas.scene');
+const scene_vc = new VideoContext(scene_cnv);
+let nextPartnerId;
+
+module.exports = (signalClient,peer,peersRef,myStream)=>{
+	console.log('handle stream called');
+	const camFeedA_stream = myStream;
+// 	const camFeedA_track = camFeedA_stream.getVideoTracks()[0];
+	const camFeedA_vid = document.createElement('video');
+	camFeedA_vid.srcObject = camFeedA_stream;	
+	camFeedA_vid.play();
+	
+	peer.addStream(camFeedComp_stream);
+	peer.once('stream',stream=>{
+		console.log('receiving Comp Stream',stream); //<do something with compStream;
+	// 	▼▼ ghost stream ▼▼ 
+		peer.on('stream',async stream=>{
+			if(stream.id == camFeedA_stream.id){
+				// await getConnectionState();
+				camFeedB_vid.srcObject = stream;
+				camFeedB_vid.play();			
+				setCamFeed_vc(camFeed_vc,camFeed_cnv,camFeedA_vid,camFeedB_vid);
+			}else{
+				peer.addStream(stream);
+			}
+		});
+		signalClient.socket.emit('getNextPartner');
+	});
+
+	signalClient.socket.on('nextPartner',nextPartnerId=>{
+		newNextPartner(nextPartnerId);
+	});
+
+	var getConnectionState = ()=>{
+		return new Promise((resolve,reject)=>{
+			const pc = peer._pc;
+			if(pc.connectionState=='connected'||pc.connectionState=='completed'){
+				resolve('connection ready');
+			}
+			pc.on('connectionstatechange',()=>{
+				if(pc.connectionState=='connected'||pc.connectionState=='completed'){
+					resolve('connection ready');
+				}else if(pc.connectionState=='closed'){
+					console.log('connection closed');
+					reject();
+				}
+			});
+		});
+	};
+
+	function newNextPartner(newNextPartnerId){
+		if(newNextPartnerId !== nextPartnerId && newNextPartnerId != signalClient.id){
+			if(nextPartnerId){ // only if there was already a partner
+				const oldNextPartner = peersRef.array.find(p=>p.peerId == nextPartnerId);
+				if(oldNextPartner) oldNextPartner.peer.removeStream(camFeedA_stream); // < making sure oldPartner hasnt disconnected
+			}			
+			const newNextPartner = peersRef.array.find(p=>p.peerId == newNextPartnerId);
+			newNextPartner.peer.addStream(camFeedA_stream);
+		}
+		nextPartnerId = newNextPartnerId;
+	}
+
+	window.handleStream = {
+	camFeedA_stream,
+	camFeedA_vid,
+	camFeedB_vid,
+	camFeed_cnv,
+	camFeed_vc,
+	camFeedComp_stream,
+	scene_cnv,
+	scene_vc
+	}; //for debugging;
 };
 
 /*red
 module.exports = (socket,peersRef,camStream)=>{
 
 	let partnerPrev;
-	let partnerNext;
+	let nextPartner;
 
 	//elements always present
 	const camFeedA_stream = camStream;
@@ -42,26 +117,26 @@ module.exports = (socket,peersRef,camStream)=>{
 			}
 		});
 
-		if(callData.nextUser !== partnerNext && partnerNext != socket.id){
-			if(partnerNext){ // only if there was already a partner
-				const oldPartnerNext = peersRef.array.find(p=>p.peerId == partnerNext);
-				oldPartnerNext.peer.removeStream(camFeedA_stream);	
+		if(callData.nextUser !== nextPartner && nextPartner != socket.id){
+			if(nextPartner){ // only if there was already a partner
+				const oldNextPartner = peersRef.array.find(p=>p.peerId == nextPartner);
+				oldNextPartner.peer.removeStream(camFeedA_stream);	
 			}			
-			const newPartnerNext = peersRef.array.find(p=>p.peerId == callData.nextUser);
-			newPartnerNext.peer.addStream(camFeedA_stream);
+			const newnextPartner = peersRef.array.find(p=>p.peerId == callData.nextUser);
+			newnextPartner.peer.addStream(camFeedA_stream);
 		} // ^^ built for track event	
-		partnerNext = callData.nextUser;
+		nextPartner = callData.nextUser;
 		partnerPrev = callData.prevUser;
 
-	// //	if(callData.nextUser !== partnerNext && partnerNext != socket.id){
-	// 		if(partnerNext){ // only if there was already a partner
-	// 			const oldPartnerNext = peersRef.array.find(p=>p.peerId == partnerNext);
-	// 			const streamOutgoingOldPartnerNext = oldParnterNext.peer.streams[0];
-	// 			oldPartnerNext.peer.removeTrack(camFeedA_track,streamOutgoingOldPartnerNext);	
+	// //	if(callData.nextUser !== nextPartner && nextPartner != socket.id){
+	// 		if(nextPartner){ // only if there was already a partner
+	// 			const oldNextPartner = peersRef.array.find(p=>p.peerId == nextPartner);
+	// 			const streamOutgoingOldnextPartner = oldParnterNext.peer.streams[0];
+	// 			oldNextPartner.peer.removeTrack(camFeedA_track,streamOutgoingOldnextPartner);	
 	// 		}			
-	// 		const newPartnerNext = peersRef.array.find(p=>p.peerId == callData.nextUser);
-	// 		const streamOutgoingNewPartner = newPartnerNext.peer.streams[0];
-	// 		newPartnerNext.peer.addTrack(camFeedA_track,streamOutgoingNewPartner);
+	// 		const newnextPartner = peersRef.array.find(p=>p.peerId == callData.nextUser);
+	// 		const streamOutgoingNewPartner = newnextPartner.peer.streams[0];
+	// 		newnextPartner.peer.addTrack(camFeedA_track,streamOutgoingNewPartner);
 	// //	} ^^ built for track event
 	// //	if(callData.prevUser !== partnerPrev){
 	// 		const oldPartnerPrev = peersRef.array.find(p=>p.peerId == partnerPrev);
@@ -117,7 +192,7 @@ function findPartnerPrev(partnerPrev_new){
 	if(partnerPrev_new==partnerPrev)return;
 	partnerPrev=partnerPrev_new;
 }
-function findPartnerNext(partnerNext_new){
-	if(partnerNext_new==partnerNext)return;
-	partnerNext=partnerNext_new;
+function findnextPartner(nextPartner_new){
+	if(nextPartner_new==nextPartner)return;
+	nextPartner=nextPartner_new;
 }
