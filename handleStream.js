@@ -10,6 +10,7 @@ const scene_vc = new VideoContext(scene_cnv);
 let nextPartnerId;
 
 module.exports = (signalClient,peer,peersRef,myStream)=>{
+
 	console.log('handle stream called');
 	const camFeedA_stream = myStream;
 // 	const camFeedA_track = camFeedA_stream.getVideoTracks()[0];
@@ -20,15 +21,19 @@ module.exports = (signalClient,peer,peersRef,myStream)=>{
 	peer.addStream(camFeedComp_stream);
 	peer.once('stream',stream=>{
 		console.log('receiving Comp Stream',stream); //<do something with compStream;
+		addCompNode(stream);
 	// 	▼▼ ghost stream ▼▼ 
 		peer.on('stream',async stream=>{
+/*#ff00ff*/	await Promise.all([IceConnectionPromise(peer),trackUnmutePromise(stream)]);
+/*#ffff00*/	await new Promise((resolve,reject)=>{
+				setTimeout(()=>{resolve();},2000);
+			});
 			if(stream.id == camFeedA_stream.id){
-				// await getConnectionState();
 				camFeedB_vid.srcObject = stream;
 				camFeedB_vid.play();			
 				setCamFeed_vc(camFeed_vc,camFeed_cnv,camFeedA_vid,camFeedB_vid);
 			}else{
-				peer.addStream(stream);
+				peer.addStream(stream);				
 			}
 		});
 		signalClient.socket.emit('getNextPartner');
@@ -37,23 +42,6 @@ module.exports = (signalClient,peer,peersRef,myStream)=>{
 	signalClient.socket.on('nextPartner',nextPartnerId=>{
 		newNextPartner(nextPartnerId);
 	});
-
-	var getConnectionState = ()=>{
-		return new Promise((resolve,reject)=>{
-			const pc = peer._pc;
-			if(pc.connectionState=='connected'||pc.connectionState=='completed'){
-				resolve('connection ready');
-			}
-			pc.on('connectionstatechange',()=>{
-				if(pc.connectionState=='connected'||pc.connectionState=='completed'){
-					resolve('connection ready');
-				}else if(pc.connectionState=='closed'){
-					console.log('connection closed');
-					reject();
-				}
-			});
-		});
-	};
 
 	function newNextPartner(newNextPartnerId){
 		if(newNextPartnerId !== nextPartnerId && newNextPartnerId != signalClient.id){
@@ -167,6 +155,33 @@ module.exports = (socket,peersRef,camStream)=>{
 };
 red*/
 
+/* okok :
+so, im sending empty stream from comp_cnv
+im rendering to comp_cnv (from bounced streams);
+i am creating a new_canvas element and drawing to it from comp_cnv
+i am capturing a stream new_canvas
+i am getting vt(_old) from comp_stream
+i am getting vt(_new) from new_canvas_stream
+i am replacingTrack(vt_old,vt_new,comp_stream)l;
+
+notes:
+this is fine, the canvas buffer is indepenedent from comp_vc, since
+	comp_vc will update automatically on changing camFeedB_vid's srcObject;
+
+*/
+
+function addCompNode(stream){
+	scene_cnv.width = camFeed_cnv.width;
+	scene_cnv.height = camFeed_cnv.height;
+	const vid = document.createElement('video');
+	vid.srcObject = stream;
+	vid.play();
+	const vidNode = scene_vc.video(vid);
+	vidNode.start(0);
+	vidNode.connect(scene_vc.destination);
+	scene_vc.play();
+};
+
 function setCamFeed_vc(vc,cnv,vidA,vidB){
 	cnv.width = vidA.videoWidth;
 	cnv.height = vidA.videoHeight;
@@ -183,16 +198,103 @@ function setCamFeed_vc(vc,cnv,vidA,vidB){
 	invertColors_node.connect(opacity_node);
 	vidA_node.connect(vc.destination);
 	opacity_node.connect(vc.destination);
-	window.vc = vc;
 	document.body.appendChild(cnv);
 	vc.play();
+	// red red red
+	var btn = document.createElement('button');
+	btn.innerText = 'FULLSCREEN';
+	document.body.appendChild(btn);
+	btn.addEventListener('click',()=>{
+		cnv.requestFullscreen();
+	});
 }
 
-function findPartnerPrev(partnerPrev_new){
-	if(partnerPrev_new==partnerPrev)return;
-	partnerPrev=partnerPrev_new;
+function listenIceChange(peer){
+	peer._pc.oniceconnectionstatechange = ()=>{
+		console.log(`peer ICE state is ${peer._pc.iceConnectionState}`);
+	};
+	console.log(`peer ICE state is ${peer._pc.iceConnectionState}`);
+} //purple debugging
+
+function listenTrackMuted(stream){
+	const vt = stream.getVideoTracks()[0];
+	vt.onunmmute=()=>{
+		console.log(`stream id: ${stream.id}`);
+		console.log(`track mute status: ${vt.muted}`);
+	};
+	vt.onmute=()=>{
+		console.log(`stream id: ${stream.id}`);
+		console.log(`track mute status: ${vt.muted}`);
+	};
+	console.log(`stream id: ${stream.id}`);
+	console.log(`track mute status: ${vt.muted}`);
+} //purple debugging
+
+function listenTrackDisabled(stream){
+	const vt = stream.getVideoTracks()[0];
+	console.log(`track enabled status: ${vt.enabled}`);
+	if(!vt.enabled){
+		const listen = setInterval(()=>{
+			if(vt.enabled){
+				console.log(`track enabled status: ${vt.enabled}`);
+				clearInterval(listen);
+			}
+		},100);
+	}
+} //purple debugging
+
+function getConnectionState(){
+	return new Promise((resolve,reject)=>{
+		const pc = peer._pc;
+		if(pc.connectionState=='connected'||pc.connectionState=='completed'){
+			resolve('connection ready');
+		}
+		pc.on('connectionstatechange',()=>{
+			if(pc.connectionState=='connected'||pc.connectionState=='completed'){
+				resolve('connection ready');
+			}else if(pc.connectionState=='closed'){
+				console.log('connection closed');
+				reject();
+			}
+		});
+	});
+} //<< waiting for _pc.connectionState (useless ?) 
+
+/*#ff00ff*/
+function IceConnectionPromise(peer){
+	const pc = peer._pc;
+	return new Promise((resolve,reject)=>{
+		if(pc.iceConnectionState == 'connected'||pc.iceConnectionState == 'completed'){
+			resolve(pc.iceConnectionState);
+		}
+		pc.oniceconnectionstatechange = ()=>{
+			if(pc.iceConnectionState == 'connected'||pc.iceConnectionState == 'completed'){
+				resolve(pc.iceConnectionState);
+			}else if(pc.iceConnectionState == 'closed'){
+				reject(pc.iceConnectionState);
+			}
+		};
+		const expire = setTimeout(()=>{
+			reject('iceConnection expired');
+		},10000);
+	});
 }
-function findnextPartner(nextPartner_new){
-	if(nextPartner_new==nextPartner)return;
-	nextPartner=nextPartner_new;
+/*#ff00ff*/
+function trackUnmutePromise(stream){
+	return new Promise((resolve,reject)=>{
+		const vt = stream.getVideoTracks()[0];
+		if(!vt.muted)resolve('unmuted');
+		const checkMuted = ()=>{
+			setTimeout(()=>{
+				if(!vt.muted){
+					resolve('unmuted');
+				}else{checkMuted();}
+			},333);
+		};
+		checkMuted();
+		const expire = setTimeout(()=>{
+			reject('track unmute expired');
+		},10000);
+	});
 }
+

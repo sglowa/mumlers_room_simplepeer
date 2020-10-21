@@ -17,8 +17,10 @@ const constraints = {
 			exact:320,
 			ideal:320
 		},
+		framerate:18.00,
 		resizeMode:"crop-and-scale"
-	}};
+	}
+};
 
 navigator.mediaDevices.getUserMedia(constraints)
 	.then(async myStream =>{
