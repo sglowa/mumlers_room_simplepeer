@@ -10,11 +10,11 @@ const constraints = {
 	audio : false,
 	video : {
 		width:{
-			exact:480,
+			// exact:480,
 			ideal:480
 		},
 		height:{
-			exact:320,
+			// exact:320,
 			ideal:320
 		},
 		framerate:18.00,
@@ -35,6 +35,7 @@ navigator.mediaDevices.getUserMedia(constraints)
 
 	}).catch(err=>{
 		console.error(err);
+		alert("seems that your camera isn't working");
 	});
 
 

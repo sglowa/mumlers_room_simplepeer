@@ -4,7 +4,6 @@ const camFeedB_vid = document.createElement('video');
 const camFeed_cnv = document.createElement('canvas');
 const camFeed_vc = new VideoContext(camFeed_cnv);
 const camFeedComp_stream = camFeed_cnv.captureStream();
-// const camFeedComp_track = camFeedComp_stream.getVideoTracks()[0];
 const scene_cnv = document.querySelector('canvas.scene');
 const scene_vc = new VideoContext(scene_cnv);
 let nextPartnerId;
@@ -13,12 +12,22 @@ module.exports = (signalClient,peer,peersRef,myStream)=>{
 
 	console.log('handle stream called');
 	const camFeedA_stream = myStream;
-// 	const camFeedA_track = camFeedA_stream.getVideoTracks()[0];
 	const camFeedA_vid = document.createElement('video');
 	camFeedA_vid.srcObject = camFeedA_stream;	
 	camFeedA_vid.play();
 	
-	peer.addStream(camFeedComp_stream);
+	const newNextPartner = (newNextPartnerId)=>{
+		if(newNextPartnerId !== nextPartnerId && newNextPartnerId != signalClient.id){
+			if(nextPartnerId){ // only if there was already a partner
+				const oldNextPartner = peersRef.array.find(p=>p.peerId == nextPartnerId);
+				if(oldNextPartner) oldNextPartner.peer.removeStream(camFeedA_stream); // < making sure oldPartner hasnt disconnected
+			}			
+			const newNextPartner = peersRef.array.find(p=>p.peerId == newNextPartnerId);
+			newNextPartner.peer.addStream(camFeedA_stream);
+		}
+		nextPartnerId = newNextPartnerId;
+	};
+
 	peer.once('stream',stream=>{
 		console.log('receiving Comp Stream',stream); //<do something with compStream;
 		addCompNode(stream);
@@ -37,23 +46,13 @@ module.exports = (signalClient,peer,peersRef,myStream)=>{
 			}
 		});
 		signalClient.socket.emit('getNextPartner');
-	});
+	});	
 
 	signalClient.socket.on('nextPartner',nextPartnerId=>{
 		newNextPartner(nextPartnerId);
 	});
 
-	function newNextPartner(newNextPartnerId){
-		if(newNextPartnerId !== nextPartnerId && newNextPartnerId != signalClient.id){
-			if(nextPartnerId){ // only if there was already a partner
-				const oldNextPartner = peersRef.array.find(p=>p.peerId == nextPartnerId);
-				if(oldNextPartner) oldNextPartner.peer.removeStream(camFeedA_stream); // < making sure oldPartner hasnt disconnected
-			}			
-			const newNextPartner = peersRef.array.find(p=>p.peerId == newNextPartnerId);
-			newNextPartner.peer.addStream(camFeedA_stream);
-		}
-		nextPartnerId = newNextPartnerId;
-	}
+	peer.addStream(camFeedComp_stream);
 
 	window.handleStream = {
 	camFeedA_stream,
@@ -66,6 +65,8 @@ module.exports = (signalClient,peer,peersRef,myStream)=>{
 	scene_vc
 	}; //for debugging;
 };
+
+
 
 /*red
 module.exports = (socket,peersRef,camStream)=>{
@@ -155,7 +156,7 @@ module.exports = (socket,peersRef,camStream)=>{
 };
 red*/
 
-/* okok :
+/* possible fix for chrome red-green issue :
 so, im sending empty stream from comp_cnv
 im rendering to comp_cnv (from bounced streams);
 i am creating a new_canvas element and drawing to it from comp_cnv
@@ -167,15 +168,20 @@ i am replacingTrack(vt_old,vt_new,comp_stream)l;
 notes:
 this is fine, the canvas buffer is indepenedent from comp_vc, since
 	comp_vc will update automatically on changing camFeedB_vid's srcObject;
-
 */
 
-function addCompNode(stream){
-	scene_cnv.width = camFeed_cnv.width;
-	scene_cnv.height = camFeed_cnv.height;
+// scene vc is always 1. it should be created in a higher scope & passed down;
+// i can set it up at the top (it will init once, at require)
+//remember : handleStreams is called for every peer established. 
+// • for each peer i need to create a video node,
+// if render graph has more than 2 video nodes > connect them to compNode.  
+
+async function addCompNode(stream){
+	// scene_cnv.width = camFeed_cnv.width;
+	// scene_cnv.height = camFeed_cnv.height;
 	const vid = document.createElement('video');
 	vid.srcObject = stream;
-	vid.play();
+	await vid.play();
 	const vidNode = scene_vc.video(vid);
 	vidNode.start(0);
 	vidNode.connect(scene_vc.destination);
