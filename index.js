@@ -7,7 +7,7 @@
 //                        navigator.msGetUserMedia);
 
 const constraints = {
-	audio : false,
+	audio : true,
 	video : {
 		width:{
 			// exact:480,
@@ -30,7 +30,7 @@ navigator.mediaDevices.getUserMedia(constraints)
 			const vtOld = myStream.getVideoTracks()[0];
 			const tempVid = document.createElement('video');
 			tempVid.src = `./tempVideos/${x}.mp4`;
-			await tempVid.loop = true;
+			tempVid.loop = true;
 			await tempVid.play();
 			const tempStr = tempVid.captureStream();
 			const vtNew = tempStr.getVideoTracks()[0];

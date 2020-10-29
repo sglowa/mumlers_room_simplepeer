@@ -1,25 +1,37 @@
 /*jshint esversion:6*/
 
 const camFeedA_vid = document.createElement('video');
+let camFeedA_stream = null;
 const camFeedB_vid = document.createElement('video');	
+let camFeedB_stream = null;
 const camFeed_cnv = document.createElement('canvas');
 const camFeed_ctx = camFeed_cnv.getContext('2d');
-//camFeed_vc
 const camFeedComp_stream = camFeed_cnv.captureStream();
+let camFeed_node = null;
+let camFeedComp_isInit = false;
+let camFeedComp_audio = null;
 const scene_cnv = document.querySelector('canvas.scene');
 const scene_vc = new VideoContext(scene_cnv);
+scene_cnv.width = 720;
+scene_cnv.height = 480;
 const blenderNode = scene_vc.effect(require('./shader_descriptions').sixInputBlender);
 blenderNode.connect(scene_vc.destination);
 const fpsWorker = new Worker('./fps.js');
 let nextPartnerId;
 
-module.exports = (signalClient,peer,peersRef,myStream)=>{
-
+module.exports = async (signalClient,peer,peersRef,myStream)=>{
 
 	console.log('handle stream called');
-	const camFeedA_stream = myStream;	
-	camFeedA_vid.srcObject = camFeedA_stream;	
-	camFeedA_vid.play();	
+	if(!camFeedA_stream){
+		camFeedA_stream = myStream;	
+		camFeedComp_audio = camFeedA_stream.getAudioTracks()[0];
+		if(camFeedComp_audio){
+			camFeedComp_stream.addTrack(camFeedComp_audio);
+			camFeedA_stream.removeTrack(camFeedComp_audio);
+			camFeedA_vid.srcObject = camFeedA_stream;	
+			await camFeedA_vid.play();	
+		}		
+	}	
 	
 	const newNextPartner = (newNextPartnerId)=>{
 		if(newNextPartnerId !== nextPartnerId && newNextPartnerId != signalClient.id){
@@ -69,28 +81,25 @@ module.exports = (signalClient,peer,peersRef,myStream)=>{
 	}; //for debugging;
 };
 
-// scene vc is always 1. it should be created in a higher scope & passed down;
-// i can set it up at the top (it will init once, at require)
-//remember : handleStreams is called for every peer established. 
-// • for each peer i need to create a video node,
-// if render graph has more than 2 video nodes > connect them to compNode.  
 
-async function addCompNode(stream){
-	// scene_cnv.width = camFeed_cnv.width;
-	// scene_cnv.height = camFeed_cnv.height;
-	const vid = document.createElement('video');
+async function addCompNode(stream){	
+	const vid = document.createElement('video'); // << this needs to be destroyed on peer leaves
 	vid.srcObject = stream;
 	await vid.play();
 	const vidNode = scene_vc.video(vid);
 	vidNode.start(0);
-	vidNode.connect(scene_vc.destination);
+	vidNode.connect(blenderNode);
+	if(scene_vc.state==0)return;
 	scene_vc.play();
 };
 
-function setCamFeed_ctx(stream){
-	camFeedB_vid.srcObject = stream;
-	camFeedB_vid.play();			
+async function setCamFeed_ctx(stream){
+	camFeedB_stream = stream;
+	camFeedB_vid.srcObject = camFeedB_stream;
+	await camFeedB_vid.play();			
 	
+	if(camFeedComp_isInit) return;
+	camFeedComp_isInit = true;
 	camFeed_cnv.width = camFeedA_vid.videoWidth;
 	camFeed_cnv.height = camFeedA_vid.videoHeight;
 
@@ -106,14 +115,23 @@ function setCamFeed_ctx(stream){
 	};	
 	fpsWorker.addEventListener('message',render);
 	fpsWorker.postMessage('start');
+	camFeed_node = scene_vc.canvas(camFeed_cnv);
+	camFeed_node.start(0);
+	camFeed_node.connect(blenderNode);
 
 	let btn = document.createElement('button');
 	btn.innerText = 'FULLSCREEN';
 	document.body.appendChild(btn);
 	btn.addEventListener('click',()=>{
-		camFeed_cnv.requestFullscreen();
+		if(scene_cnv.classList.contains('fullscreen')){
+			scene_cnv.classList.remove('fullscreen');	
+		}else{
+			scene_cnv.classList.add('fullscreen');	
+		}
 	});
 }
+
+
 
 function listenIceChange(peer){
 	peer._pc.oniceconnectionstatechange = ()=>{

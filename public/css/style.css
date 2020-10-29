@@ -3,13 +3,13 @@ body{
 	background:#808080;
 }
 
-canvas#final_output{
+canvas.fullscreen{
 	position:absolute;
 	height: 100%;
 	top:0px;
 	left:50%;
 	transform: translate(-50%,0);
-	z-index: -9;
+	z-index: -999;
 }
 
 div.connection{

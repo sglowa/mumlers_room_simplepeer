@@ -64,7 +64,8 @@ const sixInputBlender = {
 
 
             float adjuster = pow(2.0,6.0)/2.0;          
-            vec4 col = col1*col2*col3*col4*adjuster;
+            vec4 col = col1*col2*col3*col4*col5*col6*adjuster;
+            //vec4 col = col1*col2*2.0;
 
             // Output to screen
             gl_FragColor = col;
