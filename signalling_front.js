@@ -48,7 +48,7 @@ const SimpleSignalClient = require('simple-signal-client');
 module.exports = (socket,name,myStream,handleStreams)=>{
 	console.log('running signalling front');
 	
-	const signalClient = new SimpleSignalClient(socket);
+	const signalClient = new SimpleSignalClient(socket,{connectionTimeout:33333});
 	
 	async function connectToPeer(peerId){
 		console.log('connecting to peer',signalClient);
