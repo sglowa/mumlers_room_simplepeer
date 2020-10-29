@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "browserify": "^16.5.2",
+    "express": "^4.17.1",
     "getusermedia": "^2.0.1",
     "httpolyglot": "^0.1.2",
     "pm2": "^4.5.0",
