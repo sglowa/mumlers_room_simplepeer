@@ -24,6 +24,35 @@ const constraints = {
 
 navigator.mediaDevices.getUserMedia(constraints)
 	.then(async myStream =>{
+
+		// #872735#872735#872735 forTesting
+		const replaceStreamForTesting = async x=>{
+			const vtOld = myStream.getVideoTracks()[0];
+			const tempVid = document.createElement('video');
+			tempVid.src = `./tempVideos/${x}.mp4`;
+			await tempVid.loop = true;
+			await tempVid.play();
+			const tempStr = tempVid.captureStream();
+			const vtNew = tempStr.getVideoTracks()[0];
+			myStream.removeTrack(vtOld);
+			myStream.addTrack(vtNew);
+		};
+		const btn = document.createElement('button');
+		btn.innerText = 'change track';
+		const menu = document.createElement('select');
+		for (var i = 1; i <= 4; i++) {
+			let option = document.createElement('option');
+			option.value = i+'';
+			option.innerText = option.value;
+			menu.appendChild(option);
+		}
+		document.body.appendChild(menu);
+		document.body.appendChild(btn);
+		btn.onclick = ()=>{
+			replaceStreamForTesting(menu.value);
+		};
+		// #872735#872735#872735
+
 		const  socket = io();
 		socket.on('connect',()=>console.log('socket connected'));
 		const roomForm = require('./roomForm.js');			

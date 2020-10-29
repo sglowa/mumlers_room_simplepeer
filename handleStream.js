@@ -1,20 +1,25 @@
 /*jshint esversion:6*/
 
+const camFeedA_vid = document.createElement('video');
 const camFeedB_vid = document.createElement('video');	
 const camFeed_cnv = document.createElement('canvas');
-const camFeed_vc = new VideoContext(camFeed_cnv);
+const camFeed_ctx = camFeed_cnv.getContext('2d');
+//camFeed_vc
 const camFeedComp_stream = camFeed_cnv.captureStream();
 const scene_cnv = document.querySelector('canvas.scene');
 const scene_vc = new VideoContext(scene_cnv);
+const blenderNode = scene_vc.effect(require('./shader_descriptions').sixInputBlender);
+blenderNode.connect(scene_vc.destination);
+const fpsWorker = new Worker('./fps.js');
 let nextPartnerId;
 
 module.exports = (signalClient,peer,peersRef,myStream)=>{
 
+
 	console.log('handle stream called');
-	const camFeedA_stream = myStream;
-	const camFeedA_vid = document.createElement('video');
+	const camFeedA_stream = myStream;	
 	camFeedA_vid.srcObject = camFeedA_stream;	
-	camFeedA_vid.play();
+	camFeedA_vid.play();	
 	
 	const newNextPartner = (newNextPartnerId)=>{
 		if(newNextPartnerId !== nextPartnerId && newNextPartnerId != signalClient.id){
@@ -38,9 +43,7 @@ module.exports = (signalClient,peer,peersRef,myStream)=>{
 				setTimeout(()=>{resolve();},2000);
 			});
 			if(stream.id == camFeedA_stream.id){
-				camFeedB_vid.srcObject = stream;
-				camFeedB_vid.play();			
-				setCamFeed_vc(camFeed_vc,camFeed_cnv,camFeedA_vid,camFeedB_vid);
+				setCamFeed_ctx(stream);
 			}else{
 				peer.addStream(stream);				
 			}
@@ -59,116 +62,12 @@ module.exports = (signalClient,peer,peersRef,myStream)=>{
 	camFeedA_vid,
 	camFeedB_vid,
 	camFeed_cnv,
-	camFeed_vc,
+	camFeed_ctx,
 	camFeedComp_stream,
 	scene_cnv,
 	scene_vc
 	}; //for debugging;
 };
-
-
-
-/*red
-module.exports = (socket,peersRef,camStream)=>{
-
-	let partnerPrev;
-	let nextPartner;
-
-	//elements always present
-	const camFeedA_stream = camStream;
-	const camFeedA_track = camFeedA_stream.getVideoTracks()[0];
-	const camFeedA_vid = document.createElement('video');
-	camFeedA_vid.srcObject = camStream;	
-	camFeedA_vid.play();
-	const camFeedB_vid = document.createElement('video');	
-	const camFeed_cnv = document.createElement('canvas');
-	const camFeed_vc = new VideoContext(camFeed_cnv);
-	const camFeedComp_stream = camFeed_cnv.captureStream();
-	const camFeedComp_track = camFeedComp_stream.getVideoTracks()[0];
-	const scene_cnv = document.querySelector('canvas.scene');
-	const scene_vc = new VideoContext(scene_cnv);
-	// const scene_stream = scene_cnv.captureStream(); // i dont need to send the scene stream
-
-	socket.on('handle new stream',callData=>{
-		const peer = peersRef.array.find(p=>p.peerId == callData.peerId).peer;
-		const streamIncoming = callData.stream;
-		const streamOutgoing = peer.streams[0];
-		const placeholder_track = streamOutgoing.getVideoTracks()[0];
-		peer.replaceTrack(placeholder_track,camFeedComp_track,streamOutgoing);
-
-		peer.on('stream',stream=>{
-			if(stream.id == camFeedA_stream.id){
-				camFeedB_vid.srcObject = stream;
-				camFeedB_vid.play();
-				setCamFeed_vc(camFeed_vc,camFeed_cnv,camFeedA_vid,camFeedB_vid);
-			}else{
-				peer.addStream(stream);
-			}
-		});
-
-		if(callData.nextUser !== nextPartner && nextPartner != socket.id){
-			if(nextPartner){ // only if there was already a partner
-				const oldNextPartner = peersRef.array.find(p=>p.peerId == nextPartner);
-				oldNextPartner.peer.removeStream(camFeedA_stream);	
-			}			
-			const newnextPartner = peersRef.array.find(p=>p.peerId == callData.nextUser);
-			newnextPartner.peer.addStream(camFeedA_stream);
-		} // ^^ built for track event	
-		nextPartner = callData.nextUser;
-		partnerPrev = callData.prevUser;
-
-	// //	if(callData.nextUser !== nextPartner && nextPartner != socket.id){
-	// 		if(nextPartner){ // only if there was already a partner
-	// 			const oldNextPartner = peersRef.array.find(p=>p.peerId == nextPartner);
-	// 			const streamOutgoingOldnextPartner = oldParnterNext.peer.streams[0];
-	// 			oldNextPartner.peer.removeTrack(camFeedA_track,streamOutgoingOldnextPartner);	
-	// 		}			
-	// 		const newnextPartner = peersRef.array.find(p=>p.peerId == callData.nextUser);
-	// 		const streamOutgoingNewPartner = newnextPartner.peer.streams[0];
-	// 		newnextPartner.peer.addTrack(camFeedA_track,streamOutgoingNewPartner);
-	// //	} ^^ built for track event
-	// //	if(callData.prevUser !== partnerPrev){
-	// 		const oldPartnerPrev = peersRef.array.find(p=>p.peerId == partnerPrev);
-	// 		const streamOutgoingOldPartnerPrev = oldPartnerPrev.peer.streams[0];
-	// 		const camFeedPartner_track = streamOutgoingOldPartnerPrev.getVideoTracks()
-	// 			.find(t=> !(t instanceof CanvasCaptureMediaStreamTrack));
-	// 		oldPartnerPrev.peer.removeTrack(camFeedPartner_track,streamOutgoingOldPartnerPrev);	
-	// //	} // seems unnecessary since the track is also being removed on oldPrevPartner's side ? ? << old partnerHandling (with track event);
-
-		peer.on('close',()=>{
-			// again i only need to re-establish the next partner;
-			console.log('peer closed');
-		});
-	});
-	//for debugging 
-	window.handleStream = {
-	camFeedA_stream,
-	camFeedA_track,
-	camFeedA_vid,
-	camFeedB_vid,
-	camFeed_cnv,
-	camFeed_vc,
-	camFeedComp_stream,
-	camFeedComp_track,
-	scene_cnv,
-	scene_vc
-	};
-};
-red*/
-
-/* possible fix for chrome red-green issue :
-so, im sending empty stream from comp_cnv
-im rendering to comp_cnv (from bounced streams);
-i am creating a new_canvas element and drawing to it from comp_cnv
-i am capturing a stream new_canvas
-i am getting vt(_old) from comp_stream
-i am getting vt(_new) from new_canvas_stream
-i am replacingTrack(vt_old,vt_new,comp_stream)l;
-
-notes:
-this is fine, the canvas buffer is indepenedent from comp_vc, since
-	comp_vc will update automatically on changing camFeedB_vid's srcObject;
-*/
 
 // scene vc is always 1. it should be created in a higher scope & passed down;
 // i can set it up at the top (it will init once, at require)
@@ -188,30 +87,31 @@ async function addCompNode(stream){
 	scene_vc.play();
 };
 
-function setCamFeed_vc(vc,cnv,vidA,vidB){
-	cnv.width = vidA.videoWidth;
-	cnv.height = vidA.videoHeight;
-	const vidA_node = vc.video(vidA);
-	vidA_node.start(0);
-	const vidB_node = vc.video(vidB);
-	vidB_node.start(0);
-	const invertColors_description = require('./shader_descriptions.js')
-		.invertColEffectDescription;
-	const invertColors_node = vc.effect(invertColors_description);
-	vidB_node.connect(invertColors_node);
-	const opacity_node = vc.effect(VideoContext.DEFINITIONS.OPACITY);
-	opacity_node.opacity = 0.5;
-	invertColors_node.connect(opacity_node);
-	vidA_node.connect(vc.destination);
-	opacity_node.connect(vc.destination);
-	document.body.appendChild(cnv);
-	vc.play();
-	// red red red
-	var btn = document.createElement('button');
+function setCamFeed_ctx(stream){
+	camFeedB_vid.srcObject = stream;
+	camFeedB_vid.play();			
+	
+	camFeed_cnv.width = camFeedA_vid.videoWidth;
+	camFeed_cnv.height = camFeedA_vid.videoHeight;
+
+	const render=()=>{
+		camFeed_ctx.globalAlpha = 1.0;
+		camFeed_ctx.drawImage(camFeedB_vid,0,0);
+		camFeed_ctx.globalCompositeOperation='difference';
+		camFeed_ctx.fillStyle='white';
+		camFeed_ctx.fillRect(0,0,camFeed_cnv.width,camFeed_cnv.height);
+		camFeed_ctx.globalCompositeOperation='source-over';
+		camFeed_ctx.globalAlpha = 0.5;
+		camFeed_ctx.drawImage(camFeedA_vid,0,0);
+	};	
+	fpsWorker.addEventListener('message',render);
+	fpsWorker.postMessage('start');
+
+	let btn = document.createElement('button');
 	btn.innerText = 'FULLSCREEN';
 	document.body.appendChild(btn);
 	btn.addEventListener('click',()=>{
-		cnv.requestFullscreen();
+		camFeed_cnv.requestFullscreen();
 	});
 }
 
