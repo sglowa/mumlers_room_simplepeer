@@ -41,6 +41,7 @@ module.exports = async (signalClient,peer,peersRef,myStream)=>{
 			}			
 			const newNextPartner = peersRef.array.find(p=>p.peerId == newNextPartnerId);
 			newNextPartner.peer.addStream(camFeedA_stream);
+			console.log('sending my stream to partner');
 		}
 		nextPartnerId = newNextPartnerId;
 	};
@@ -50,13 +51,16 @@ module.exports = async (signalClient,peer,peersRef,myStream)=>{
 		addCompNode(stream);
 	// 	▼▼ ghost stream ▼▼ 
 		peer.on('stream',async stream=>{
+			console.log('receiving stream');
 /*#ff00ff*/	await Promise.all([IceConnectionPromise(peer),trackUnmutePromise(stream)]);
 /*#ffff00*/	await new Promise((resolve,reject)=>{
 				setTimeout(()=>{resolve();},2000);
 			});
 			if(stream.id == camFeedA_stream.id){
+				console.log('receiving my stream');
 				setCamFeed_ctx(stream);
 			}else{
+				console.log('receiving partner stream, bouncing back');
 				peer.addStream(stream);				
 			}
 		});
