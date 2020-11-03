@@ -29,7 +29,7 @@ module.exports = async (signalClient,peer,peersRef,myStream)=>{
 			camFeedComp_stream.addTrack(camFeedComp_audio);
 			camFeedA_stream.removeTrack(camFeedComp_audio);
 			camFeedA_vid.srcObject = camFeedA_stream;	
-			await camFeedA_vid.play();	
+			camFeedA_vid.play();	
 		}		
 	}	
 	
@@ -46,6 +46,18 @@ module.exports = async (signalClient,peer,peersRef,myStream)=>{
 		}
 		nextPartnerId = newNextPartnerId;
 	};
+
+	peer.on('data',data=>{
+		data = data+'';
+		if(data != 'ready for partner streams') return;
+		if((peersRef.array.length == 1 && peer.initiator)||peersRef.array.length > 1){
+			signalClient.socket.emit('getNextPartner');
+		}			
+	});
+
+	signalClient.socket.on('nextPartner',nextPartnerId=>{
+		newNextPartner(nextPartnerId);
+	});
 
 	peer.once('stream',stream=>{
 		console.log('receiving Comp Stream',stream); //<do something with compStream;
@@ -68,24 +80,8 @@ module.exports = async (signalClient,peer,peersRef,myStream)=>{
 				}
 			}
 		});
-		if((peersRef.array.length == 1 && peer.initiator)||peersRef.array.length > 1){
-			signalClient.socket.emit('getNextPartner');
-		}
+		peer.send('ready for partner streams');
 	});	
-
-	signalClient.socket.on('nextPartner',nextPartnerId=>{
-		/*
-		if 2 peers && im joiner 
-		send my camstream
-		wait for the stream to be sent back to me
-		let partner know i received my stream bounced 
-		partner : sends her stream
-		joiner receives the stream and sends it back.  
-
-		*/
-
-		newNextPartner(nextPartnerId);
-	});
 
 	peer.addStream(camFeedComp_stream);
 
