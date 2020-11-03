@@ -54,21 +54,36 @@ module.exports = async (signalClient,peer,peersRef,myStream)=>{
 		peer.on('stream',async stream=>{
 			console.log('receiving stream');
 /*#ff00ff*/	await Promise.all([IceConnectionPromise(peer),trackUnmutePromise(stream)]);
-/*#ffff00	await new Promise((resolve,reject)=>{
-				setTimeout(()=>{resolve();},2000);
-			}); */
 			if(stream.id == camFeedA_stream.id){
 				console.log('receiving my stream');
 				setCamFeed_ctx(stream);
 			}else{
 				console.log('receiving partner stream, bouncing back');
-				peer.addStream(stream);				
+				peer.addStream(stream);
+				if(peersRef.array.length == 1 && !peer.initiator){
+	/*#ffff00*/		await new Promise((resolve,reject)=>{
+						setTimeout(()=>{resolve();},1000);
+					}); 
+					signalClient.socket.emit('getNextPartner');
+				}
 			}
 		});
-		signalClient.socket.emit('getNextPartner');
+		if((peersRef.array.length == 1 && peer.initiator)||peersRef.array.length > 1){
+			signalClient.socket.emit('getNextPartner');
+		}
 	});	
 
 	signalClient.socket.on('nextPartner',nextPartnerId=>{
+		/*
+		if 2 peers && im joiner 
+		send my camstream
+		wait for the stream to be sent back to me
+		let partner know i received my stream bounced 
+		partner : sends her stream
+		joiner receives the stream and sends it back.  
+
+		*/
+
 		newNextPartner(nextPartnerId);
 	});
 
