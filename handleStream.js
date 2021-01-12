@@ -121,7 +121,7 @@ async function setCamFeed_ctx(stream){
 
 	const render=()=>{
 		camFeed_ctx.globalAlpha = 1.0;
-		camFeed_ctx.drawImage(camFeedB_vid,0,0);
+		camFeed_ctx.drawImage(camFeedB_vid,0,0,camFeed_cnv.width,camFeed_cnv.height);
 		camFeed_ctx.globalCompositeOperation='difference';
 		camFeed_ctx.fillStyle='white';
 		camFeed_ctx.fillRect(0,0,camFeed_cnv.width,camFeed_cnv.height);

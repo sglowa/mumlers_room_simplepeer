@@ -14,9 +14,12 @@ const peersRef = {array:[]}; // locally stored array of peers in the room [{peer
 // 				    ]
 // 				};
 
-// xirsys stun/turn config
+
+// xirsys stun/turn config 1
+/*
 let config = {"iceServers" : [
 		{urls: [ "stun:eu-turn2.xirsys.com" ]},
+		{urls: ['stun:stun.l.google.com:19302']},
 		{username: "DhZKBos2ZBjkR6rB4RzhDu6rSVpWIWDLUZJWQhBYDDVGBtb5qcdVUtGYow26onscAAAAAF-DEjZjemFqbmljemVr",
 	   	credential: "71ed90ba-0bcb-11eb-b26b-0242ac140004",
 	   	urls: [
@@ -26,8 +29,54 @@ let config = {"iceServers" : [
 	       "turn:eu-turn2.xirsys.com:3478?transport=tcp",
 	       "turns:eu-turn2.xirsys.com:443?transport=tcp",
 	       "turns:eu-turn2.xirsys.com:5349?transport=tcp"
-	   	]}
+	   	]},
+
+	    {urls: ['turn:numb.viagenie.ca:3478?transport=udp',
+	    		'turn:numb.viagenie.ca:3478?transport=tcp'], //?transport=tcp
+	   	username: 's9lowacki@gmail.com',
+	    credential: 'testingtestint'
+		}	    
 	]};
+*/
+
+// xirsys stun/turn config 2
+/*
+let config = {"iceServers": [
+	{urls: [ "stun:eu-turn8.xirsys.com" ]}, 
+   	{username: "_CinuHeBH_T_LYbsBQHaCxC-7VRpUTVYScP-FE8RZSaz60P9mnm2mE_Watt_PnIQAAAAAF-_ygNtdW1sZXIx",
+   	credential: "45ba51c2-2ffc-11eb-9f2b-0242ac140004",
+   	urls: [
+       "turn:eu-turn8.xirsys.com:80?transport=udp",
+       "turn:eu-turn8.xirsys.com:3478?transport=udp",
+       "turn:eu-turn8.xirsys.com:80?transport=tcp",
+       "turn:eu-turn8.xirsys.com:3478?transport=tcp",
+       "turns:eu-turn8.xirsys.com:443?transport=tcp",
+       "turns:eu-turn8.xirsys.com:5349?transport=tcp"
+   	]}
+]};
+*/
+
+// xirsys stun/turn config 2
+
+let config = {
+	"iceServers": [
+		{urls: [ "stun:eu-turn1.xirsys.com" ]},
+		{
+			username: "GjqgkNQlbGabDKvtTV7QPiN2VGPSx23wxWngq8KXNfs8gV3YFdNIDpRETzBgLCT8AAAAAF_gzvJtdW1sZXIz",
+			credential: "9d1ff626-43aa-11eb-9bf0-0242ac140004",
+			urls: [
+			    "turn:eu-turn1.xirsys.com:80?transport=udp",
+			    "turn:eu-turn1.xirsys.com:3478?transport=udp",
+			    "turn:eu-turn1.xirsys.com:80?transport=tcp",
+			    "turn:eu-turn1.xirsys.com:3478?transport=tcp",
+			    "turns:eu-turn1.xirsys.com:443?transport=tcp",
+			    "turns:eu-turn1.xirsys.com:5349?transport=tcp"
+			]
+	   	}
+	]
+};
+
+
 // TRYING TO GET CONFIG VIA API, DOESNT WOOORKKK... BUT SHOULD !
 // A PROBLEM WITH HTTPS.REQUEST < socket err
 // socket.on('ice config',ice_str=>{
