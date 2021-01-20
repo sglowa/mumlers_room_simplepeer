@@ -6,9 +6,9 @@ const pug = require('pug');
 const path = require('path');
 let io = require('socket.io');
 const app = express();
-const privateKey = fs.readFileSync('/etc/letsencrypt/live/justfornow.ml/privkey.pem', 'utf8');
-const certificate = fs.readFileSync('/etc/letsencrypt/live/justfornow.ml/cert.pem', 'utf8');
-const ca = fs.readFileSync('/etc/letsencrypt/live/justfornow.ml/chain.pem', 'utf8');
+const privateKey = fs.readFileSync('/etc/letsencrypt/live/justfornow.tk/privkey.pem', 'utf8');
+const certificate = fs.readFileSync('/etc/letsencrypt/live/justfornow.tk/cert.pem', 'utf8');
+const ca = fs.readFileSync('/etc/letsencrypt/live/justfornow.tk/chain.pem', 'utf8');
 const credentials = {
 	key: privateKey,
 	cert: certificate,

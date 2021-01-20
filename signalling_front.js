@@ -3,6 +3,7 @@ window.getMembers = ()=>{ // for debugging
 	console.log(peersRef);
 };
 
+const helpers = require('./helpers');
 const peersRef = {array:[]}; // locally stored array of peers in the room [{peerId:"",peer:{}}]
 
 // viagenie stun/turn config
@@ -94,36 +95,82 @@ const options = {
 };
 let currentRoom; 
 const SimpleSignalClient = require('simple-signal-client');
-module.exports = (socket,name,myStream,handleStreams)=>{
+
+module.exports = (socket,name,myStream,handleStreams)=>{	
 	console.log('running signalling front');
+	let msgElem;
 	
 	const signalClient = new SimpleSignalClient(socket,{connectionTimeout:33333});
 	
 	async function connectToPeer(peerId){
-		console.log('connecting to peer',signalClient);
+		console.log('connecting to peer (joiner)',signalClient);
 		const {peer} = await signalClient.connect(peerId,currentRoom,options); // why am i sending current room ?
 		peersRef.array.push({peer,peerId});
-		console.log('connected to peer', peer);
-		handleStreams(signalClient,peer,peersRef,myStream);
+		console.log('connected to peer', peer);		
+		helpers.removeOnce(msgElem);
+		handleStreams(signalClient,peer,peersRef,myStream,name);
 	}
 
-	function joinRoom(discoveryData){
+	function joinRoom(discoveryData){		
 		if(discoveryData.roomName == name){
+			msgElem = joiningMsg(name);
 			console.log(discoveryData);
 			signalClient.removeListener('discover',joinRoom);
 			discoveryData.members.forEach(peerId=>{
 				connectToPeer(peerId);
 			});
+			if(!discoveryData.members.length){
+				helpers.removeOnce(msgElem);
+				msgElem = waitingMsg();
+			}
 		}
 	}
+
 	currentRoom = name;
 	signalClient.on('request',async request=>{
-		console.log('connecting to peer',signalClient);
+		console.log('connecting to peer (member)',signalClient);
 		const {peer} = await request.accept(null,options);
 		peersRef.array.push({peer,peerId:request.initiator});
 		console.log('connected to peer', peer);
+		helpers.removeOnce(msgElem);
 		handleStreams(signalClient,peer,peersRef,myStream);
 	});
 	signalClient.addListener('discover',joinRoom);
 	signalClient.discover(name);
 };
+
+function joiningMsg(name){
+	const msg = document.createElement('span');
+	document.body.appendChild(msg);
+	msg.className = 'info joining';
+	msg.innerText = `Joining ${name}.`;
+	let count = 0;
+	const interval = setInterval(()=>{
+		if(count==2){
+			count=0;
+			msg.innerText = `Joining ${name}.`;
+			return;
+		}
+		msg.innerText+='.';
+		count++;
+	},500);
+	return msg;
+}
+
+function waitingMsg(name){
+	const msg = document.createElement('span');
+	document.body.appendChild(msg);
+	msg.className = 'info waiting';
+	msg.innerText = `Waiting for someone.`;
+	let count = 0;
+	const interval = setInterval(()=>{
+		if(count==2){
+			count=0;
+			msg.innerText = `Waiting for someone.`;
+			return;
+		}
+		msg.innerText+='.';
+		count++;
+	},500);
+	return msg;
+}

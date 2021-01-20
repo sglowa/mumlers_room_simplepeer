@@ -12,16 +12,54 @@ canvas.fullscreen{
 	z-index: -999;
 }
 
-div.connection{
-	width: 66px;
-	height: 66px;
+.logo{
+	display: block;
+	height: 50px;
+	width: 50px;	
+}
+.logo#name{
+	background: yellow;
+}
+.logo#icon{
+	background: green;
 }
 
-div.connection[isConnected="false"] {
-  background-color: red;
+/*fading out errors*/
+/*
+#form-wrapper > .errors{
+	display: block;
+	height: 100px;
+	width: 100px;
+	background-color: red;
+	-webkit-mask-position: 0px 200px;
+	-webkit-mask-image: linear-gradient(to top, #ffffffff 00%, #ffffffff 50%, #ffffff00 75%, #ffffff00 100%);
+	-webkit-mask-size: 400px 400px;
+    animation-name: example;
+    animation-duration: 8s;
 }
 
-div.connection[isConnected="true"] {
-  background-color: green;
+@-webkit-keyframes example{
+	from{-webkit-mask-position: 0px 200px}
+	to{-webkit-mask-position: 0px 400px;}
 }
+*/
+
+#chatinterface_wrapper > button{
+	display: block;
+	width: 222px;
+	height: 50px;
+	border: 1px solid black;
+}
+
+#chatinterface_wrapper > .toggleVolume{
+	display: block;
+	width: 222px;
+	height: 50px;
+	border: 2px solid red;
+}
+
+#chatinterface_wrapper > .toggleVolume[volume]{
+	border: 2px solid green;
+}
+
 

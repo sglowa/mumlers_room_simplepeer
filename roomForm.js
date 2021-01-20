@@ -1,10 +1,20 @@
 /*jshint esversion:6*/
 const helpers = require('./helpers');
 
-const parseHtmlRes = (html)=>{
-	const wrapper = document.createElement('div');
-	wrapper.innerHTML = html;
-	return wrapper.firstChild;
+let timeout;
+const printErr = (errArr)=>{
+	const t = errArr.length * 4; 
+	const errDiv = document.querySelector('#form-wrapper > .errors');
+	if(timeout !== 'undefined')clearTimeout(timeout);
+	errDiv.innerHTML = '';
+	errArr.forEach(err=>{
+		const errSpan = document.createElement('span');
+		errSpan.className = 'err';
+		errSpan.innerText = `${err}\n`;
+		errDiv.appendChild(errSpan);
+	});
+	// print, set animation
+	timeout = setTimeout(()=>{errDiv.innerHTML = '';},t*1000);
 };
 
 // const submitRoomName=(input,socket_id,url)=>{
@@ -21,18 +31,20 @@ module.exports = (socket)=>{
 	});
 
 	let formHtml = helpers.httpGet('./form');
-	formHtml = parseHtmlRes(formHtml);
+	formHtml = helpers.parseHtmlRes(formHtml);
 	document.body.prepend(formHtml);
 	const buttons = formHtml.querySelectorAll('button');
 	let val;
 	for (let elem of buttons) {
 		elem.addEventListener('click',(event)=>{
 			const className = event.target.classList[0];
-			val = formHtml.querySelector(`textarea.${className}`).value;
+			val = formHtml.querySelector(`textarea.room`).value;
 			let errors = helpers.validateInput(val);
 			errors = errors.concat(helpers.sanitizeInput(val));
 			if(errors.length>0){
-				errors.forEach(err=>console.error(err));
+				//#0000ff append each err to formHTML
+				// fade out and destroy 
+				printErr(errors);
 				return;
 			}
 			socket.emit('check room',val,className);
@@ -47,30 +59,29 @@ module.exports = (socket)=>{
 		switch(res.purpose){
 			case 'join' :
 				if(!res.roomExists){
-					message = "room doesn't exist";
+					printErr(["room doesn't exist"]);
 					break;
 				}
 				if(res.isFull){
-					message = "room is full";
+					printErr(["room is full"]);
 					break;
 				}
-				message = "room joined";
+				printErr(["room joined"]);
 				// socket.emit('join room',val);
 				resolvePromise(val); //red
 				formHtml.parentNode.removeChild(formHtml);
 				break;
 			case 'open' :
 				if(res.roomExists){
-					message = "room already exist";
+					printErr(["room already exist"]);
 					break;
 				}
-				message = 'room created';
+				printErr(['room created']);
 				// socket.emit('join room',val);
 				resolvePromise(val); //red
 				formHtml.parentNode.removeChild(formHtml);
 				break;
 		}
-		alert(message);	
 	});	
 
 	return promise;

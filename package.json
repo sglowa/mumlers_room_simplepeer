@@ -7,6 +7,7 @@
     "start": "browserify index.js -o ./public/bundle.js; node app",
     "start_prod": "browserify index.js -o ./public/bundle.js; pm2 start app.js",
     "start_local": "browserify index.js -o ./public/bundle.js; node --inspect-brk app_local",
+    "start_local_dev": "watchify index.js -o ./public/bundle.js & node --inspect-brk app_local",
     "start_remote_test": "browserify index.js -o ./public/bundle.js & node app_test"
   },
   "author": "psinka",

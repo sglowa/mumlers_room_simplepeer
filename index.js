@@ -6,6 +6,7 @@
 //                        navigator.mozGetUserMedia ||
 //                        navigator.msGetUserMedia);
 
+		//#0000ff change routes && index.pug 
 const constraints = {
 	audio : true,
 	video : {
@@ -24,7 +25,7 @@ const constraints = {
 
 navigator.mediaDevices.getUserMedia(constraints)
 	.then(async myStream =>{
-
+		document.querySelector('span.mediaReq').parentElement.removeChild(document.querySelector('span.mediaReq'));
 		// #872735#872735#872735 forTesting
 		const replaceStreamForTesting = async x=>{
 			const vtOld = myStream.getVideoTracks()[0];
@@ -57,14 +58,20 @@ navigator.mediaDevices.getUserMedia(constraints)
 		socket.on('connect',()=>console.log('socket connected'));
 		const roomForm = require('./roomForm.js');			
 		const roomName = await roomForm(socket);
+		// #0000ff ^ i need to style this. 
 		const signalling_f = require('./signalling_front.js');
 		const handleStreams = require('./handleStream.js');
+		// #0000ff get waiting for others...
+		// #0000ff get |chatInterface:roomLeft|disconnected|shareScreen|mute|roomName
 		signalling_f(socket,roomName,myStream,handleStreams);		
 		// handleStreams(socket,peersRef,myStream);
 
 	}).catch(err=>{
-		console.error(err);
-		alert("seems that your camera isn't working");
+		// #0000ff serve error page.
+		const errMsg = document.createElement('span'); 
+		errMsg.className = 'err';
+		errMsg.innerText = 'This site requires a webcam and a microphone.\nPlease, refresh the website and enable webcam and mic.';
+		document.body.appendChild(errMsg);
 	});
 
 

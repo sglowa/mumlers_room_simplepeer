@@ -5,15 +5,9 @@ html
 		title Mumler
 		link(rel='stylesheet' type='text/css' href='css/style.css')
 	body
-		h1 this comes from pug!
-		div.connection(isConnected='false')
-		label(for="") Enter your message
-		br
-		textarea#yourMessage
-		button#send send
-		br
-		pre#messages
-		br
+		div.logo#name
+		div.logo#icon
+		span.info.mediaReq Allow mumler to use your webcam and microphone
 		div.scene-wrapper
 			canvas.scene
 		script(src="https://cdn.polyfill.io/v3/polyfill.min.js?features=console,document,JSON")

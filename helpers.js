@@ -107,6 +107,16 @@ const wrapInVideo=stream=>{
 	v.play();
 }
 
+const parseHtmlRes = (html)=>{
+	const wrapper = document.createElement('div');
+	wrapper.innerHTML = html;
+	return wrapper.firstChild;
+};
+
+const removeOnce = (elem)=>{
+	if(elem.parentElement==null)return;
+	elem.parentElement.removeChild(elem);
+};
 
 // using es6 shorthand
 module.exports = {
@@ -116,5 +126,7 @@ module.exports = {
 	sanitizeInput,
 	getUserMedia,
 	makeEmptyStream,
-	wrapInVideo
+	wrapInVideo,
+	parseHtmlRes,
+	removeOnce
 };

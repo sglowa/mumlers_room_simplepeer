@@ -26,6 +26,7 @@ module.exports = (io)=>{
 
 		signalServer.on('discover',request=>{
 			const roomName = request.discoveryData;
+			console.log(roomName);
 			if(rooms[roomName]){
 				rooms[roomName].add(request.socket.id);
 			}else{rooms[roomName] = new Set([request.socket.id]);}
@@ -37,19 +38,29 @@ module.exports = (io)=>{
 			request.discover({roomName,members});
 		});
 
+/*red! gets triggered on temporary disconnects, after which
+peer comes back, peer connection is reestablished automatically,
+peer's signalClient has the same id, but new socket with a new id*/
 		signalServer.on('disconnect',socket=>{
 			console.log('peer disconnected');
 			const client = socket.id;
 			const roomName = socketToRoom[socket.id];
 			if(rooms[roomName]){
+				console.log(rooms[roomName]);
+				rooms[roomName].forEach(s=>io.to(s).emit('peer left',client));
 				rooms[roomName].delete(socket.id);
-				if(rooms[roomName].size==0) delete rooms[roomName];
+				delete socketToRoom[client];
+				if(rooms[roomName].size==0){
+					delete rooms[roomName];
+				}
+
 			}
 		});
 
-		socket.on('disconnect',()=>{
-			console.log('socket disconnected');
-		});
+//purple		
+/*dbg*/	socket.on('get socket id',()=>console.log(socket.id));
+
+		socket.on('disconnect',()=>console.log('socket disconnected'));
 
 		socket.on('getNextPartner',()=>{
 			const nextPartnerId = getNextUser(socket.id);
@@ -87,3 +98,8 @@ function getNextUser(memberId){
 		return room[partner_i];
 	}
 } // returns NextUserId
+
+global.debugging = {
+	getRooms:()=>console.log("rooms", rooms),
+	getSocketToRoom:()=>console.log("socket to room", socketToRoom)
+};

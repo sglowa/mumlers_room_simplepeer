@@ -1,4 +1,5 @@
 /*jshint esversion:6*/
+const chatInterface = require('./chatInterface');
 
 const camFeedA_vid = document.createElement('video');
 let camFeedA_stream = null;
@@ -9,7 +10,7 @@ const camFeed_ctx = camFeed_cnv.getContext('2d');
 const camFeedComp_stream = camFeed_cnv.captureStream();
 let camFeed_node = null;
 let camFeedComp_isInit = false;
-let camFeedComp_audio = null;
+let camFeedComp_audio = {data:null};
 const scene_cnv = document.querySelector('canvas.scene');
 const scene_vc = new VideoContext(scene_cnv);
 scene_cnv.width = 720;
@@ -21,13 +22,16 @@ let nextPartnerId;
 
 module.exports = async (signalClient,peer,peersRef,myStream)=>{
 
+	// #0000ff  show chatInterface
+	chatInterface.constructInterface(signalClient,myStream,camFeedComp_audio,peersRef);
+
 	console.log('handle stream called');
 	if(!camFeedA_stream){
 		camFeedA_stream = myStream;	
-		camFeedComp_audio = camFeedA_stream.getAudioTracks()[0];
-		if(camFeedComp_audio){
-			camFeedComp_stream.addTrack(camFeedComp_audio);
-			camFeedA_stream.removeTrack(camFeedComp_audio);
+		camFeedComp_audio.data = camFeedA_stream.getAudioTracks()[0];
+		if(camFeedComp_audio.data){
+			camFeedComp_stream.addTrack(camFeedComp_audio.data);
+			camFeedA_stream.removeTrack(camFeedComp_audio.data);
 			camFeedA_vid.srcObject = camFeedA_stream;	
 			camFeedA_vid.play();	
 		}		
@@ -35,16 +39,17 @@ module.exports = async (signalClient,peer,peersRef,myStream)=>{
 	
 	const newNextPartner = newNextPartnerId=>{
 		if(newNextPartnerId !== nextPartnerId && newNextPartnerId != signalClient.id){
-			if(nextPartnerId){ // only if there was already a partner
+			if(nextPartnerId && peersRef.array.find(i=>i.peerId==nextPartnerId) != null){ // only if there was already a partner and partner hasn't just left
 				const oldNextPartner = peersRef.array.find(p=>p.peerId == nextPartnerId);
 				if(oldNextPartner) oldNextPartner.peer.removeStream(camFeedA_stream); // < making sure oldPartner hasnt disconnected
 			}			
 			const newNextPartner = peersRef.array.find(p=>p.peerId == newNextPartnerId);
 			// await Promise.all([IceConnectionPromise(peer),trackUnmutePromise(stream)]);
-			newNextPartner.peer.addStream(camFeedA_stream);
+/*red*/		newNextPartner.peer.addStream(camFeedA_stream); // < option : i'm not updating stream sent to partner
 			console.log('sending my stream to partner');
 		}
 		nextPartnerId = newNextPartnerId;
+		chatInterface.setNextPartner(nextPartnerId);
 	};
 
 	peer.on('data',data=>{
@@ -70,9 +75,9 @@ module.exports = async (signalClient,peer,peersRef,myStream)=>{
 				console.log('receiving my stream');
 				setCamFeed_ctx(stream);
 			}else{
-				console.log('receiving partner stream, bouncing back');
+/*red*/			console.log('receiving partner stream, bouncing back'); //< option :partner is not updating track on stream he sends back
 				peer.addStream(stream);
-				if(peersRef.array.length == 1 && !peer.initiator){
+	/*???*/			if(peersRef.array.length == 1 && !peer.initiator){
 	/*#ffff00*/		await new Promise((resolve,reject)=>{
 						setTimeout(()=>{resolve();},1000);
 					}); 
@@ -85,6 +90,14 @@ module.exports = async (signalClient,peer,peersRef,myStream)=>{
 
 	peer.addStream(camFeedComp_stream);
 
+	signalClient.socket.on('peer left',whoLeft=>{
+		const i = peersRef.array.findIndex(p=>p.peerId==whoLeft);
+		if(i>=0){
+			peersRef.array.splice(i,1);
+			if(nextPartnerId == whoLeft)signalClient.socket.emit('getNextPartner');	
+		}
+	});
+
 	window.handleStream = {
 	camFeedA_stream,
 	camFeedA_vid,
@@ -93,8 +106,15 @@ module.exports = async (signalClient,peer,peersRef,myStream)=>{
 	camFeed_ctx,
 	camFeedComp_stream,
 	scene_cnv,
-	scene_vc
-	}; //for debugging;
+	scene_vc,
+	signalClient,
+	myStream,
+	nextPartnerId
+	};
+	window.getSocketId = ()=>{
+	 	signalClient.socket.emit('get socket id');
+	};
+	//for debugging;
 };
 
 
@@ -127,7 +147,7 @@ async function setCamFeed_ctx(stream){
 		camFeed_ctx.fillRect(0,0,camFeed_cnv.width,camFeed_cnv.height);
 		camFeed_ctx.globalCompositeOperation='source-over';
 		camFeed_ctx.globalAlpha = 0.5;
-		camFeed_ctx.drawImage(camFeedA_vid,0,0);
+		camFeed_ctx.drawImage(camFeedA_vid,0,0,camFeed_cnv.width,camFeed_cnv.height);
 	};	
 	fpsWorker.addEventListener('message',render);
 	fpsWorker.postMessage('start');
