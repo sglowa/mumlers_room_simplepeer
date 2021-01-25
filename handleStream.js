@@ -155,16 +155,6 @@ async function setCamFeed_ctx(stream){
 	camFeed_node.start(0);
 	camFeed_node.connect(blenderNode);
 
-	let btn = document.createElement('button');
-	btn.innerText = 'FULLSCREEN';
-	document.body.appendChild(btn);
-	btn.addEventListener('click',()=>{
-		if(scene_cnv.classList.contains('fullscreen')){
-			scene_cnv.classList.remove('fullscreen');	
-		}else{
-			scene_cnv.classList.add('fullscreen');	
-		}
-	});
 }
 
 

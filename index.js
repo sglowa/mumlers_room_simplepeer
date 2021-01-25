@@ -26,6 +26,7 @@ const constraints = {
 navigator.mediaDevices.getUserMedia(constraints)
 	.then(async myStream =>{
 		document.querySelector('span.mediaReq').parentElement.removeChild(document.querySelector('span.mediaReq'));
+		/*
 		// #872735#872735#872735 forTesting
 		const replaceStreamForTesting = async x=>{
 			const vtOld = myStream.getVideoTracks()[0];
@@ -52,7 +53,7 @@ navigator.mediaDevices.getUserMedia(constraints)
 		btn.onclick = ()=>{
 			replaceStreamForTesting(menu.value);
 		};
-		// #872735#872735#872735
+		// #872735#872735#872735 */
 
 		const  socket = io();
 		socket.on('connect',()=>console.log('socket connected'));
@@ -67,11 +68,13 @@ navigator.mediaDevices.getUserMedia(constraints)
 		// handleStreams(socket,peersRef,myStream);
 
 	}).catch(err=>{
+		document.querySelector('span.mediaReq').parentElement.removeChild(document.querySelector('span.mediaReq'));
 		// #0000ff serve error page.
 		const errMsg = document.createElement('span'); 
 		errMsg.className = 'err';
-		errMsg.innerText = 'This site requires a webcam and a microphone.\nPlease, refresh the website and enable webcam and mic.';
-		document.body.appendChild(errMsg);
+		errMsg.innerHTML = '<span>Error</span><br><span>This site requires a webcam and a microphone.<br>Please, refresh the website and enable webcam and mic.</span>';
+		const mainContent = document.querySelector('.main-content');
+		mainContent.appendChild(errMsg);
 	});
 
 

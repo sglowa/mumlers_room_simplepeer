@@ -1,7 +1,8 @@
 div#chatinterface_wrapper
-	div.roomName
-	div.toggleVolume(volume) 
-	div.logContent
-	button.toggleLog Show log
-	button.leaveRoom Leave room
-	button.shareScreen(share) Share Screen
+	div.toggleVolume.fading(volume)   volume  
+	div.bottom
+		div.log.fading
+			div.logContent
+			button.toggleLog Show log
+		button.leaveRoom.fading Leave room
+		button.shareScreen.fading(share) Share Screen

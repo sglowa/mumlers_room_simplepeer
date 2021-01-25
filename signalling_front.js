@@ -16,49 +16,8 @@ const peersRef = {array:[]}; // locally stored array of peers in the room [{peer
 // 				};
 
 
-// xirsys stun/turn config 1
-/*
-let config = {"iceServers" : [
-		{urls: [ "stun:eu-turn2.xirsys.com" ]},
-		{urls: ['stun:stun.l.google.com:19302']},
-		{username: "DhZKBos2ZBjkR6rB4RzhDu6rSVpWIWDLUZJWQhBYDDVGBtb5qcdVUtGYow26onscAAAAAF-DEjZjemFqbmljemVr",
-	   	credential: "71ed90ba-0bcb-11eb-b26b-0242ac140004",
-	   	urls: [
-	       "turn:eu-turn2.xirsys.com:80?transport=udp",
-	       "turn:eu-turn2.xirsys.com:3478?transport=udp",
-	       "turn:eu-turn2.xirsys.com:80?transport=tcp",
-	       "turn:eu-turn2.xirsys.com:3478?transport=tcp",
-	       "turns:eu-turn2.xirsys.com:443?transport=tcp",
-	       "turns:eu-turn2.xirsys.com:5349?transport=tcp"
-	   	]},
-
-	    {urls: ['turn:numb.viagenie.ca:3478?transport=udp',
-	    		'turn:numb.viagenie.ca:3478?transport=tcp'], //?transport=tcp
-	   	username: 's9lowacki@gmail.com',
-	    credential: 'testingtestint'
-		}	    
-	]};
-*/
-
 // xirsys stun/turn config 2
 /*
-let config = {"iceServers": [
-	{urls: [ "stun:eu-turn8.xirsys.com" ]}, 
-   	{username: "_CinuHeBH_T_LYbsBQHaCxC-7VRpUTVYScP-FE8RZSaz60P9mnm2mE_Watt_PnIQAAAAAF-_ygNtdW1sZXIx",
-   	credential: "45ba51c2-2ffc-11eb-9f2b-0242ac140004",
-   	urls: [
-       "turn:eu-turn8.xirsys.com:80?transport=udp",
-       "turn:eu-turn8.xirsys.com:3478?transport=udp",
-       "turn:eu-turn8.xirsys.com:80?transport=tcp",
-       "turn:eu-turn8.xirsys.com:3478?transport=tcp",
-       "turns:eu-turn8.xirsys.com:443?transport=tcp",
-       "turns:eu-turn8.xirsys.com:5349?transport=tcp"
-   	]}
-]};
-*/
-
-// xirsys stun/turn config 2
-
 let config = {
 	"iceServers": [
 		{urls: [ "stun:eu-turn1.xirsys.com" ]},
@@ -76,7 +35,25 @@ let config = {
 	   	}
 	]
 };
+*/
 
+// xirsys stun/turn config 3
+let config = {
+	"iceServers": [{
+	   urls: [ "stun:eu-turn7.xirsys.com" ]
+	}, {
+	   username: "70pah-ai-h_9BH9VLJTr3NOxOoHDTywsCqqAkzzmBXbxGJMm6u0JH-Nc0XEWtRGuAAAAAGAO7gJtdW1sZXI0",
+	   credential: "2c130092-5f28-11eb-8999-0242ac140004",
+	   urls: [
+	       "turn:eu-turn7.xirsys.com:80?transport=udp",
+	       "turn:eu-turn7.xirsys.com:3478?transport=udp",
+	       "turn:eu-turn7.xirsys.com:80?transport=tcp",
+	       "turn:eu-turn7.xirsys.com:3478?transport=tcp",
+	       "turns:eu-turn7.xirsys.com:443?transport=tcp",
+	       "turns:eu-turn7.xirsys.com:5349?transport=tcp"
+	   ]
+	}]
+};
 
 // TRYING TO GET CONFIG VIA API, DOESNT WOOORKKK... BUT SHOULD !
 // A PROBLEM WITH HTTPS.REQUEST < socket err
@@ -98,7 +75,7 @@ const SimpleSignalClient = require('simple-signal-client');
 
 module.exports = (socket,name,myStream,handleStreams)=>{	
 	console.log('running signalling front');
-	let msgElem;
+	let msgElem, roomNameElem;
 	
 	const signalClient = new SimpleSignalClient(socket,{connectionTimeout:33333});
 	
@@ -108,10 +85,12 @@ module.exports = (socket,name,myStream,handleStreams)=>{
 		peersRef.array.push({peer,peerId});
 		console.log('connected to peer', peer);		
 		helpers.removeOnce(msgElem);
+		// helpers.removeOnce(roomNameElem);
 		handleStreams(signalClient,peer,peersRef,myStream,name);
 	}
 
-	function joinRoom(discoveryData){		
+	function joinRoom(discoveryData){
+		roomNameElem = displayName(name);		
 		if(discoveryData.roomName == name){
 			msgElem = joiningMsg(name);
 			console.log(discoveryData);
@@ -122,7 +101,7 @@ module.exports = (socket,name,myStream,handleStreams)=>{
 			if(!discoveryData.members.length){
 				helpers.removeOnce(msgElem);
 				msgElem = waitingMsg();
-			}
+			}			
 		}
 	}
 
@@ -141,7 +120,7 @@ module.exports = (socket,name,myStream,handleStreams)=>{
 
 function joiningMsg(name){
 	const msg = document.createElement('span');
-	document.body.appendChild(msg);
+	document.querySelector('.main-content').appendChild(msg);
 	msg.className = 'info joining';
 	msg.innerText = `Joining ${name}.`;
 	let count = 0;
@@ -157,9 +136,9 @@ function joiningMsg(name){
 	return msg;
 }
 
-function waitingMsg(name){
+function waitingMsg(){
 	const msg = document.createElement('span');
-	document.body.appendChild(msg);
+	document.querySelector('.main-content').appendChild(msg);
 	msg.className = 'info waiting';
 	msg.innerText = `Waiting for someone.`;
 	let count = 0;
@@ -173,4 +152,24 @@ function waitingMsg(name){
 		count++;
 	},500);
 	return msg;
+}
+
+function displayName(name){
+	require('./chatInterface').setRoomName(name);
+	const div = document.createElement('div');
+	div.className = 'top';
+	nameDiv = document.createElement('div');
+	nameDiv.className = 'roomName';
+	nameDiv.classList.add('fading');
+	nameDiv.innerText = name;
+	div.appendChild(nameDiv);
+	document.querySelector('.main-content').appendChild(div);
+	nameDiv.addEventListener('click',()=>{
+		navigator.clipboard.writeText(name);
+		if(nameDiv.classList.contains('roomAnim'))nameDiv.classList.toggle('roomAnim');
+		setTimeout(()=>{
+			nameDiv.classList.toggle('roomAnim');	
+		},10);
+	});
+	return div;
 }

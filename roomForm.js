@@ -32,7 +32,7 @@ module.exports = (socket)=>{
 
 	let formHtml = helpers.httpGet('./form');
 	formHtml = helpers.parseHtmlRes(formHtml);
-	document.body.prepend(formHtml);
+	document.querySelector('.main-content').append(formHtml);
 	const buttons = formHtml.querySelectorAll('button');
 	let val;
 	for (let elem of buttons) {

@@ -2,16 +2,17 @@ doctype html
 html
 	head
 		meta(charset='utf-8')
+		meta(name = "viewport", content="width=device-width, height=device-height, initial-scale=1, shrink-to-fit=no")
 		title Mumler
 		link(rel='stylesheet' type='text/css' href='css/style.css')
 	body
-		div.logo#name
-		div.logo#icon
-		span.info.mediaReq Allow mumler to use your webcam and microphone
-		div.scene-wrapper
-			canvas.scene
+		div.main-content
+			img.logo#name(src="../assets/logo/V1-BLACK.png")
+			img.logo#icon(src="../assets/HEXAGON.png")
+			span.info.mediaReq Allow mumler to use your webcam and microphone
+			div.scene-wrapper
+				canvas.scene
 		script(src="https://cdn.polyfill.io/v3/polyfill.min.js?features=console,document,JSON")
 		script(src="/socket.io/socket.io.js")
 		script(src="/scripts/videocontext.js")
 		script(src="bundle.js" charset="utf-8")
-

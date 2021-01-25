@@ -41,6 +41,12 @@ module.exports = (io)=>{
 /*red! gets triggered on temporary disconnects, after which
 peer comes back, peer connection is reestablished automatically,
 peer's signalClient has the same id, but new socket with a new id*/
+
+/*red! i should set a promise with timeout that awaits a response from 
+the disconnected peer > 
+• if response is given, that means that the peer was disconnected temporarily and her socket if needs to be updated
+• if no response given, that means that the peer has left for sure and can be safely removed from room. 
+*/
 		signalServer.on('disconnect',socket=>{
 			console.log('peer disconnected');
 			const client = socket.id;
