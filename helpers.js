@@ -118,6 +118,23 @@ const removeOnce = (elem)=>{
 	elem.parentElement.removeChild(elem);
 };
 
+const getPageVis = ()=>{
+	var hidden, visibilityChange;
+	if (typeof document.hidden !== "undefined") { // Opera 12.10 and Firefox 18 and later support
+	  hidden = "hidden";
+	  visibilityChange = "visibilitychange";
+	} else if (typeof document.msHidden !== "undefined") {
+	  hidden = "msHidden";
+	  visibilityChange = "msvisibilitychange";
+	} else if (typeof document.webkitHidden !== "undefined") {
+	  hidden = "webkitHidden";
+	  visibilityChange = "webkitvisibilitychange";
+	}
+	return{hidden,visibilityChange};
+};
+
+
+
 // using es6 shorthand
 module.exports = {
 	httpGet,
@@ -128,5 +145,6 @@ module.exports = {
 	makeEmptyStream,
 	wrapInVideo,
 	parseHtmlRes,
-	removeOnce
+	removeOnce,
+	getPageVis
 };

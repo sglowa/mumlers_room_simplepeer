@@ -7,7 +7,7 @@ const camFeedB_vid = document.createElement('video');
 let camFeedB_stream = null;
 const camFeed_cnv = document.createElement('canvas');
 const camFeed_ctx = camFeed_cnv.getContext('2d');
-const camFeedComp_stream = camFeed_cnv.captureStream();
+const camFeedComp_stream = camFeed_cnv.captureStream(18);
 let camFeed_node = null;
 let camFeedComp_isInit = false;
 let camFeedComp_audio = {data:null};
@@ -17,7 +17,7 @@ scene_cnv.width = 720;
 scene_cnv.height = 480;
 const blenderNode = scene_vc.effect(require('./shader_descriptions').sixInputBlender);
 blenderNode.connect(scene_vc.destination);
-const fpsWorker = new Worker('./fps.js');
+// const fpsWorker = new Worker('./fps.js');
 let nextPartnerId;
 
 module.exports = async (signalClient,peer,peersRef,myStream)=>{
@@ -139,7 +139,7 @@ async function setCamFeed_ctx(stream){
 	camFeed_cnv.width = camFeedA_vid.videoWidth;
 	camFeed_cnv.height = camFeedA_vid.videoHeight;
 
-	const render=()=>{
+	const renderCnv = ()=>{
 		camFeed_ctx.globalAlpha = 1.0;
 		camFeed_ctx.drawImage(camFeedB_vid,0,0,camFeed_cnv.width,camFeed_cnv.height);
 		camFeed_ctx.globalCompositeOperation='difference';
@@ -148,9 +148,62 @@ async function setCamFeed_ctx(stream){
 		camFeed_ctx.globalCompositeOperation='source-over';
 		camFeed_ctx.globalAlpha = 0.5;
 		camFeed_ctx.drawImage(camFeedA_vid,0,0,camFeed_cnv.width,camFeed_cnv.height);
-	};	
-	fpsWorker.addEventListener('message',render);
-	fpsWorker.postMessage('start');
+	};
+
+	let render = ()=>{
+		renderCnv();
+		requestAnimationFrame(render);		
+	};
+	requestAnimationFrame(render);
+	
+	const getPageVis = request('./helpers.js').getPageVis;
+	({hidden,visibilitychange} = gatePageVis());
+	let fpsWorker;
+
+	const handleVisibilityChange = ()=>{
+		if(hidden){
+			//switch to worker 
+				//q : spawn new one OR start/stop 1 constantly running;			
+			if(fpsWorker==undefined){
+				fpsWorker = new Worker('./fps.js');
+				fpsWorker.addEventListener('message',render);
+			}
+			render = renderCnv;
+			fpsWorker.postMessage('start');
+		}else{
+			// switch to RAF
+			if(fpsWorker!==undefined) fpsWorker.postMessage('stop');
+			render = ()=>{
+				renderCnv();
+				requestAnimationFrame(render);
+			};
+			requestAnimationFrame(render);
+		}
+	};
+
+	if (typeof document.addEventListener === "undefined" || hidden === undefined) {
+	  console.log("your browser isnt supported, pls use Chrome or Firefox");
+	} else {
+	  // Handle page visibility change
+	  document.addEventListener(visibilityChange, handleVisibilityChange, false);
+	}
+
+	/*red
+	okok. actually no > the helper function should return the name of the prop and event,
+	the callback logic can be here. 
+	if visible {
+		if worker on 
+			remove worker
+		set RAF rendering 	
+	} else if hidde{
+		if RAF on {
+			stop RAF rendering
+		}
+		start Worker rendering
+	}
+	red*/
+	
+
 	camFeed_node = scene_vc.canvas(camFeed_cnv);
 	camFeed_node.start(0);
 	camFeed_node.connect(blenderNode);
