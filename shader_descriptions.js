@@ -18,7 +18,7 @@ const sixInputBlender = {
         uniform sampler2D u_image3;
         uniform sampler2D u_image4;
         uniform sampler2D u_image5;
-        uniform sampler2D u_image6;     
+        uniform sampler2D u_image6;
         varying vec2 v_texCoord;
 
         void main()
@@ -37,7 +37,6 @@ const sixInputBlender = {
             bvec3 isBlank4 = equal(col4.xyz,vec3(0.0));
             bvec3 isBlank5 = equal(col5.xyz,vec3(0.0));
             bvec3 isBlank6 = equal(col6.xyz,vec3(0.0));
-
             if(isBlank1.x&&isBlank1.y&&isBlank1.z){
                 col1 = vec4(0.5,0.5,0.5,1.0);
             }
@@ -73,6 +72,109 @@ const sixInputBlender = {
     `,
     properties:{},
     inputs:['u_image1','u_image2','u_image3','u_image4','u_image5','u_image6']
+};
+
+const tenInputBlender = {
+    title:"tenInputBlender",
+    description:"equal weight blender for 10 inputs",
+    vertexShader:`
+    attribute vec2 a_position;
+    attribute vec2 a_texCoord;
+    varying vec2 v_texCoord;
+    void main() {
+        gl_Position = vec4(vec2(2.0,2.0)*a_position-vec2(1.0, 1.0), 0.0, 1.0);
+        v_texCoord = a_texCoord;
+    }
+    `,
+    fragmentShader:`
+        precision mediump float;
+        uniform sampler2D u_image1;
+        uniform sampler2D u_image2;
+        uniform sampler2D u_image3;
+        uniform sampler2D u_image4;
+        uniform sampler2D u_image5;
+        uniform sampler2D u_image6;
+        uniform sampler2D u_image7;
+        uniform sampler2D u_image8;
+        uniform sampler2D u_image9;
+        uniform sampler2D u_image10;     
+        varying vec2 v_texCoord;
+
+        void main()
+        {
+            
+            vec4 col1 = texture2D(u_image1,v_texCoord);
+            vec4 col2 = texture2D(u_image2,v_texCoord);
+            vec4 col3 = texture2D(u_image3,v_texCoord);
+            vec4 col4 = texture2D(u_image4,v_texCoord);
+            vec4 col5 = texture2D(u_image5,v_texCoord);
+            vec4 col6 = texture2D(u_image6,v_texCoord);
+            vec4 col7 = texture2D(u_image7,v_texCoord);
+            vec4 col8 = texture2D(u_image8,v_texCoord);
+            vec4 col9 = texture2D(u_image9,v_texCoord);
+            vec4 col10 = texture2D(u_image10,v_texCoord);
+
+            bvec3 isBlank1 = equal(col1.xyz,vec3(0.0));
+            bvec3 isBlank2 = equal(col2.xyz,vec3(0.0));
+            bvec3 isBlank3 = equal(col3.xyz,vec3(0.0));
+            bvec3 isBlank4 = equal(col4.xyz,vec3(0.0));
+            bvec3 isBlank5 = equal(col5.xyz,vec3(0.0));
+            bvec3 isBlank6 = equal(col6.xyz,vec3(0.0));
+            bvec3 isBlank7 = equal(col7.xyz,vec3(0.0));
+            bvec3 isBlank8 = equal(col8.xyz,vec3(0.0));
+            bvec3 isBlank9 = equal(col9.xyz,vec3(0.0));
+            bvec3 isBlank10 = equal(col10.xyz,vec3(0.0));
+
+            if(isBlank1.x&&isBlank1.y&&isBlank1.z){
+                col1 = vec4(0.5,0.5,0.5,1.0);
+            }
+
+            if(isBlank2.x&&isBlank2.y&&isBlank2.z){
+                col2 = vec4(0.5,0.5,0.5,1.0);
+            }
+
+            if(isBlank3.x&&isBlank3.y&&isBlank3.z){
+                col3 = vec4(0.5,0.5,0.5,1.0);
+            }
+
+            if(isBlank4.x&&isBlank4.y&&isBlank4.z){
+                col4 = vec4(0.5,0.5,0.5,1.0);
+            }
+
+            if(isBlank5.x&&isBlank5.y&&isBlank5.z){
+                col5 = vec4(0.5,0.5,0.5,1.0);
+            }
+
+            if(isBlank6.x&&isBlank6.y&&isBlank6.z){
+                col6 = vec4(0.5,0.5,0.5,1.0);
+            }
+
+            if(isBlank7.x&&isBlank7.y&&isBlank7.z){
+                col7 = vec4(0.5,0.5,0.5,1.0);
+            }
+
+            if(isBlank8.x&&isBlank8.y&&isBlank8.z){
+                col8 = vec4(0.5,0.5,0.5,1.0);
+            }
+
+            if(isBlank9.x&&isBlank9.y&&isBlank9.z){
+                col9 = vec4(0.5,0.5,0.5,1.0);
+            }
+
+            if(isBlank10.x&&isBlank10.y&&isBlank10.z){
+                col10 = vec4(0.5,0.5,0.5,1.0);
+            }
+
+            float adjuster = pow(2.0,10.0)/2.0;          
+            vec4 col = col1*col2*col3*col4*col5*col6*col7*col8*col9*col10*adjuster;
+            //vec4 col = col1*col2*2.0;
+
+            // Output to screen
+            gl_FragColor = col;
+        }
+    `,
+    properties:{},
+    inputs:['u_image1','u_image2','u_image3','u_image4','u_image5','u_image6','u_image7','u_image8','u_image9','u_image10']
 };
 
 const testEffectDescription = {
@@ -145,5 +247,6 @@ const invertColEffectDescription = {
 module.exports = {
     testEffectDescription,
     invertColEffectDescription,
-    sixInputBlender
+    sixInputBlender,
+    tenInputBlender
 };

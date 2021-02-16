@@ -3,6 +3,7 @@ const validateInput = require('./helpers.js').validateInput;
 const sanitizeInput = require('./helpers.js').sanitizeInput;
 const rooms = {}; //collection of all rooms , {roomId:[socketId], ...} 
 const socketToRoom = {}; //collection of all sockets, {socketId:roomId, ...}
+const roomLimit = 10;
 
 module.exports = (io)=>{
 	const signalServer = require('simple-signal-server')(io);
@@ -19,7 +20,7 @@ module.exports = (io)=>{
 				return;
 			}
 			const roomExists = rooms[name] ? true : false;
-			const isFull = roomExists ? rooms[name].length == 6 ? true : false : false;
+			const isFull = roomExists ? rooms[name].length == roomLimit ? true : false : false;
 			socket.emit('check room result',{roomExists,isFull,purpose});
 			return;
 		});

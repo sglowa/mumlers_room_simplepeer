@@ -38,6 +38,7 @@ let config = {
 */
 
 // xirsys stun/turn config 3
+/*
 let config = {
 	"iceServers": [{
 	   urls: [ "stun:eu-turn7.xirsys.com" ]
@@ -54,6 +55,25 @@ let config = {
 	   ]
 	}]
 };
+*/
+
+let config = {
+	'iceServers': [{
+	   urls: [ "stun:eu-turn8.xirsys.com" ]
+	}, {
+	   username: "T6u8my3HMaEXaI2VPG2OFJyL3AUcJY4FniH0daUzecuD6EWwtQPPlMku6ZMtYTpJAAAAAGArcSZtdW1sZXI1",
+	   credential: "cc30a37c-7026-11eb-8999-0242ac140004",
+	   urls: [
+	       "turn:eu-turn8.xirsys.com:80?transport=udp",
+	       "turn:eu-turn8.xirsys.com:3478?transport=udp",
+	       "turn:eu-turn8.xirsys.com:80?transport=tcp",
+	       "turn:eu-turn8.xirsys.com:3478?transport=tcp",
+	       "turns:eu-turn8.xirsys.com:443?transport=tcp",
+	       "turns:eu-turn8.xirsys.com:5349?transport=tcp"
+	   ]
+	}]
+};
+
 
 // TRYING TO GET CONFIG VIA API, DOESNT WOOORKKK... BUT SHOULD !
 // A PROBLEM WITH HTTPS.REQUEST < socket err

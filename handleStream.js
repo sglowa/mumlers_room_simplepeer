@@ -15,7 +15,7 @@ const scene_cnv = document.querySelector('canvas.scene');
 const scene_vc = new VideoContext(scene_cnv);
 scene_cnv.width = 720;
 scene_cnv.height = 480;
-const blenderNode = scene_vc.effect(require('./shader_descriptions').sixInputBlender);
+const blenderNode = scene_vc.effect(require('./shader_descriptions').tenInputBlender);
 blenderNode.connect(scene_vc.destination);
 // const fpsWorker = new Worker('./fps.js');
 let nextPartnerId;
@@ -156,12 +156,13 @@ async function setCamFeed_ctx(stream){
 	};
 	requestAnimationFrame(render);
 	
-	const getPageVis = request('./helpers.js').getPageVis;
-	({hidden,visibilitychange} = gatePageVis());
+	const getPageVis = require('./helpers.js').getPageVis;
+	({hidden,visibilityChange} = getPageVis());
 	let fpsWorker;
 
 	const handleVisibilityChange = ()=>{
 		if(hidden){
+			console.log('switching to worker');
 			//switch to worker 
 				//q : spawn new one OR start/stop 1 constantly running;			
 			if(fpsWorker==undefined){
@@ -171,6 +172,7 @@ async function setCamFeed_ctx(stream){
 			render = renderCnv;
 			fpsWorker.postMessage('start');
 		}else{
+			console.log('switching to RAF');
 			// switch to RAF
 			if(fpsWorker!==undefined) fpsWorker.postMessage('stop');
 			render = ()=>{
