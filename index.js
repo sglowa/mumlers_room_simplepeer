@@ -55,8 +55,12 @@ navigator.mediaDevices.getUserMedia(constraints)
 		};
 		// #872735#872735#872735 */
 
-		const  socket = io();
-		socket.on('connect',()=>console.log('socket connected'));
+		let lastId = ''; 
+		const  socket = io(undefined,{query: {lastId}});	
+		socket.on('connect',()=> lastId = lastId ? lastId : socket.id);
+		socket.on('reconnect_attempt',()=>{
+			socket.io.opts.query = {lastId}
+		})
 		const roomForm = require('./roomForm.js');			
 		const roomName = await roomForm(socket);
 		// #0000ff ^ i need to style this. 

@@ -161,7 +161,7 @@ async function setCamFeed_ctx(stream){
 	let fpsWorker;
 
 	const handleVisibilityChange = ()=>{
-		if(hidden){
+		if(document[hidden]){
 			console.log('switching to worker');
 			//switch to worker 
 				//q : spawn new one OR start/stop 1 constantly running;			

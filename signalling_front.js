@@ -16,63 +16,55 @@ const peersRef = {array:[]}; // locally stored array of peers in the room [{peer
 // 				};
 
 
-// xirsys stun/turn config 2
-/*
-let config = {
-	"iceServers": [
-		{urls: [ "stun:eu-turn1.xirsys.com" ]},
-		{
-			username: "GjqgkNQlbGabDKvtTV7QPiN2VGPSx23wxWngq8KXNfs8gV3YFdNIDpRETzBgLCT8AAAAAF_gzvJtdW1sZXIz",
-			credential: "9d1ff626-43aa-11eb-9bf0-0242ac140004",
-			urls: [
-			    "turn:eu-turn1.xirsys.com:80?transport=udp",
-			    "turn:eu-turn1.xirsys.com:3478?transport=udp",
-			    "turn:eu-turn1.xirsys.com:80?transport=tcp",
-			    "turn:eu-turn1.xirsys.com:3478?transport=tcp",
-			    "turns:eu-turn1.xirsys.com:443?transport=tcp",
-			    "turns:eu-turn1.xirsys.com:5349?transport=tcp"
-			]
-	   	}
-	]
-};
-*/
+// xirsys stun/turn config 4
+// let config = {
+// 	'iceServers': [{
+// 	   urls: [ "stun:eu-turn8.xirsys.com" ]
+// 	}, {
+// 	   username: "T6u8my3HMaEXaI2VPG2OFJyL3AUcJY4FniH0daUzecuD6EWwtQPPlMku6ZMtYTpJAAAAAGArcSZtdW1sZXI1",
+// 	   credential: "cc30a37c-7026-11eb-8999-0242ac140004",
+// 	   urls: [
+// 	       "turn:eu-turn8.xirsys.com:80?transport=udp",
+// 	       "turn:eu-turn8.xirsys.com:3478?transport=udp",
+// 	       "turn:eu-turn8.xirsys.com:80?transport=tcp",
+// 	       "turn:eu-turn8.xirsys.com:3478?transport=tcp",
+// 	       "turns:eu-turn8.xirsys.com:443?transport=tcp",
+// 	       "turns:eu-turn8.xirsys.com:5349?transport=tcp"
+// 	   ]
+// 	}]
+// };
 
-// xirsys stun/turn config 3
-/*
-let config = {
-	"iceServers": [{
-	   urls: [ "stun:eu-turn7.xirsys.com" ]
-	}, {
-	   username: "70pah-ai-h_9BH9VLJTr3NOxOoHDTywsCqqAkzzmBXbxGJMm6u0JH-Nc0XEWtRGuAAAAAGAO7gJtdW1sZXI0",
-	   credential: "2c130092-5f28-11eb-8999-0242ac140004",
-	   urls: [
-	       "turn:eu-turn7.xirsys.com:80?transport=udp",
-	       "turn:eu-turn7.xirsys.com:3478?transport=udp",
-	       "turn:eu-turn7.xirsys.com:80?transport=tcp",
-	       "turn:eu-turn7.xirsys.com:3478?transport=tcp",
-	       "turns:eu-turn7.xirsys.com:443?transport=tcp",
-	       "turns:eu-turn7.xirsys.com:5349?transport=tcp"
-	   ]
-	}]
-};
-*/
 
-let config = {
-	'iceServers': [{
-	   urls: [ "stun:eu-turn8.xirsys.com" ]
-	}, {
-	   username: "T6u8my3HMaEXaI2VPG2OFJyL3AUcJY4FniH0daUzecuD6EWwtQPPlMku6ZMtYTpJAAAAAGArcSZtdW1sZXI1",
-	   credential: "cc30a37c-7026-11eb-8999-0242ac140004",
-	   urls: [
-	       "turn:eu-turn8.xirsys.com:80?transport=udp",
-	       "turn:eu-turn8.xirsys.com:3478?transport=udp",
-	       "turn:eu-turn8.xirsys.com:80?transport=tcp",
-	       "turn:eu-turn8.xirsys.com:3478?transport=tcp",
-	       "turns:eu-turn8.xirsys.com:443?transport=tcp",
-	       "turns:eu-turn8.xirsys.com:5349?transport=tcp"
-	   ]
-	}]
-};
+// !!!! xirsys stun/turn config 5
+// let config = {
+// 	'iceServers': [{
+// 	   urls: [ "stun:eu-turn6.xirsys.com" ]
+// 	}, {
+// 	   username: "FWS_MGPRIwLYmNlH61QjYBTc5FNerToGrcSbovQ20JNKTjufIGqBLf8yvd-bAkNwAAAAAGA4-gltdW1sZXI2",
+// 	   credential: "0834c1a0-7838-11eb-a49a-0242ac140004",
+// 	   urls: [
+// 	       "turn:eu-turn6.xirsys.com:80?transport=udp",
+// 	       "turn:eu-turn6.xirsys.com:3478?transport=udp",
+// 	       "turn:eu-turn6.xirsys.com:80?transport=tcp",
+// 	       "turn:eu-turn6.xirsys.com:3478?transport=tcp",
+// 	       "turns:eu-turn6.xirsys.com:443?transport=tcp",
+// 	       "turns:eu-turn6.xirsys.com:5349?transport=tcp"
+// 	   ]
+// 	}]
+// };
+
+let config  = {'iceServers': [
+				   { urls: ['stun:157.230.114.158:3478']},
+				   { urls: [
+				   		'turn:157.230.114.158:3478?transport=udp',
+				   		'turn:157.230.114.158:3478?transport=tcp',
+				   		'turn:157.230.114.158:5349?transport=tcp',
+				   	], //?transport=tcp
+				   	username: 'test',
+				    credential: 'test123'}
+				    ]
+				};
+
 
 
 // TRYING TO GET CONFIG VIA API, DOESNT WOOORKKK... BUT SHOULD !
