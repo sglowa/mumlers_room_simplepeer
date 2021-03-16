@@ -1,5 +1,7 @@
 /*jshint esversion:6*/
 const url = require('url');
+const URLSearchParams = require('url')
+
 const base64id = require('base64id');
 const validateInput = require('./helpers.js').validateInput;
 const sanitizeInput = require('./helpers.js').sanitizeInput;
@@ -12,7 +14,7 @@ module.exports = (io)=>{
 
 	io.engine.generateId = req =>{
 		const parsedUrl = new url.parse(req.url);
-		const lastId = (new URLSearchParams(parsedUrl.search)).get('lastId')
+		const lastId = (new url.URLSearchParams(parsedUrl.search)).get('lastId')
 		if (lastId) return lastId;
 		return base64id.generateId();
 	}
