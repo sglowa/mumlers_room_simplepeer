@@ -19,13 +19,35 @@ const blenderNode = scene_vc.effect(require('./shader_descriptions').tenInputBle
 blenderNode.connect(scene_vc.destination);
 // const fpsWorker = new Worker('./fps.js');
 let nextPartnerId;
+let receivedCamFeedB = false;
 
-module.exports = async (signalClient,peer,peersRef,myStream)=>{
+//orange this is called on each peer connection  
+module.exports = async (signalClient,peer,peersRef,myStream)=>{	
+
+	const newNextPartner = newNextPartnerId=>{
+		if(newNextPartnerId !== nextPartnerId && newNextPartnerId != signalClient.id){
+			if(nextPartnerId && peersRef.array.find(i=>i.peerId==nextPartnerId) != null){ // only if there was already a partner and partner hasn't just left
+				const oldNextPartner = peersRef.array.find(p=>p.peerId == nextPartnerId);
+				if(oldNextPartner){
+					oldNextPartner.peer.removeStream(camFeedA_stream); // < making sure oldPartner hasnt disconnected
+					console.log('stream removed from old partner')	
+				} 
+			}			
+			const newNextPartner = peersRef.array.find(p=>p.peerId == newNextPartnerId);
+			// await Promise.all([IceConnectionPromise(peer),trackUnmutePromise(stream)]);
+/*red*/		newNextPartner.peer.addStream(camFeedA_stream); // < option : i'm not updating stream sent to partner
+			receivedCamFeedB = false; // freezing camFeedComp till camFeedB is received
+			console.log('sending my stream to partner');
+		}
+		nextPartnerId = newNextPartnerId;
+		chatInterface.setNextPartner(nextPartnerId);
+	};
 
 	// #0000ff  show chatInterface
-	chatInterface.constructInterface(signalClient,myStream,camFeedComp_audio,peersRef);
+	chatInterface.constructInterfaceOnce(signalClient,myStream,camFeedComp_audio,peersRef);
 
 	console.log('handle stream called');
+	// orange called once, should be once
 	if(!camFeedA_stream){
 		camFeedA_stream = myStream;	
 		camFeedComp_audio.data = camFeedA_stream.getAudioTracks()[0];
@@ -36,22 +58,8 @@ module.exports = async (signalClient,peer,peersRef,myStream)=>{
 			camFeedA_vid.play();	
 		}		
 	}	
-	
-	const newNextPartner = newNextPartnerId=>{
-		if(newNextPartnerId !== nextPartnerId && newNextPartnerId != signalClient.id){
-			if(nextPartnerId && peersRef.array.find(i=>i.peerId==nextPartnerId) != null){ // only if there was already a partner and partner hasn't just left
-				const oldNextPartner = peersRef.array.find(p=>p.peerId == nextPartnerId);
-				if(oldNextPartner) oldNextPartner.peer.removeStream(camFeedA_stream); // < making sure oldPartner hasnt disconnected
-			}			
-			const newNextPartner = peersRef.array.find(p=>p.peerId == newNextPartnerId);
-			// await Promise.all([IceConnectionPromise(peer),trackUnmutePromise(stream)]);
-/*red*/		newNextPartner.peer.addStream(camFeedA_stream); // < option : i'm not updating stream sent to partner
-			console.log('sending my stream to partner');
-		}
-		nextPartnerId = newNextPartnerId;
-		chatInterface.setNextPartner(nextPartnerId);
-	};
 
+	// orange hooked per peer, should be per peer
 	peer.on('data',data=>{
 		data = data+'';
 		if(data != 'ready for partner streams') return;
@@ -60,43 +68,63 @@ module.exports = async (signalClient,peer,peersRef,myStream)=>{
 		}			
 	});
 
-	signalClient.socket.on('nextPartner',nextPartnerId=>{
-		newNextPartner(nextPartnerId);
-	});
-
+	// orange hooked per peer, should hook once
+	if(!signalClient.socket.listeners('nextPartner').length){
+		signalClient.socket.on('nextPartner',nextPartnerId=>{
+			newNextPartner(nextPartnerId);
+		});	
+	}
+	
+	// orange once per peer, should be once per peer
 	peer.once('stream',stream=>{
-		console.log('receiving Comp Stream',stream); //<do something with compStream;
-		addCompNode(stream);
+		console.log('receiving Comp Stream',stream);
+		addCompNode(stream).then(r=>{	// <<==▼▼ adding CompVidElem to memberObject in peersRef[] (to easily delete on peer left)		
+			const p = peersRef.array.find(p=>p.peer == peer);
+			Object.assign(p,r);
+		}); 
+
 	// 	▼▼ ghost stream ▼▼ 
 		peer.on('stream',async stream=>{
 			console.log('receiving stream');
 /*#ff00ff*/	await Promise.all([IceConnectionPromise(peer),trackUnmutePromise(stream)]);
 			if(stream.id == camFeedA_stream.id){
 				console.log('receiving my stream');
+				receivedCamFeedB = true;
 				setCamFeed_ctx(stream);
 			}else{
 /*red*/			console.log('receiving partner stream, bouncing back'); //< option :partner is not updating track on stream he sends back
 				peer.addStream(stream);
-	/*???*/			if(peersRef.array.length == 1 && !peer.initiator){
-	/*#ffff00*/		await new Promise((resolve,reject)=>{
+				if(peersRef.array.length == 1 && !peer.initiator){ // if room has only 2.
+				await new Promise((resolve,reject)=>{
 						setTimeout(()=>{resolve();},1000);
-					}); 
-					signalClient.socket.emit('getNextPartner');
+					}); 										/*y is it all here ?*/
+					signalClient.socket.emit('getNextPartner');	/*#ffff00*/
 				}
 			}
 		});
 		peer.send('ready for partner streams');
 	});	
-
+	
+	// orange per peer, should be per peer
 	peer.addStream(camFeedComp_stream);
 
-	signalClient.socket.on('peer left',whoLeft=>{
-		const i = peersRef.array.findIndex(p=>p.peerId==whoLeft);
-		if(i>=0){
-			peersRef.array.splice(i,1);
-			if(nextPartnerId == whoLeft)signalClient.socket.emit('getNextPartner');	
-		}
-	});
+	// orange hooks per peer, should hook once || DONE! << need to test 
+	// orange but also : removes leaving peer from array; then
+	//	calls newNextPartner
+	if(!signalClient.socket.listeners('peer left').length){
+		signalClient.socket.on('peer left',whoLeft=>{
+			const i = peersRef.array.findIndex(p=>p.peerId==whoLeft);
+			if(i>=0){
+				if(peersRef.array[i].vidElem)peersRef.array[i].vidElem.pause();
+				if(peersRef.array[i].vidNode)peersRef.array[i].vidNode.destroy();
+				peersRef.array.splice(i,1);
+				if(nextPartnerId == whoLeft)signalClient.socket.emit('getNextPartner');	
+			}
+			if(!peersRef.array.length){ // if 1 in room 
+				console.warn("you're alone again") // !!!!
+			}
+		});
+	}	
 
 	window.handleStream = {
 	camFeedA_stream,
@@ -109,7 +137,8 @@ module.exports = async (signalClient,peer,peersRef,myStream)=>{
 	scene_vc,
 	signalClient,
 	myStream,
-	nextPartnerId
+	nextPartnerId,
+	wrapInVid : require('./helpers.js').wrapInVideo
 	};
 	window.getSocketId = ()=>{
 	 	signalClient.socket.emit('get socket id');
@@ -119,14 +148,14 @@ module.exports = async (signalClient,peer,peersRef,myStream)=>{
 
 
 async function addCompNode(stream){	
-	const vid = document.createElement('video'); // << this needs to be destroyed on peer leaves
-	vid.srcObject = stream;
-	await vid.play();
-	const vidNode = scene_vc.video(vid);
+	const vidElem = document.createElement('video'); // << this needs to be destroyed on peer leaves
+	vidElem.srcObject = stream;
+	await vidElem.play();
+	const vidNode = scene_vc.video(vidElem);
 	vidNode.start(0);
 	vidNode.connect(blenderNode);
-	if(scene_vc.state==0)return;
-	scene_vc.play();
+	if(!scene_vc.state==0) scene_vc.play();	
+	return {vidElem,vidNode};
 };
 
 async function setCamFeed_ctx(stream){
@@ -140,6 +169,7 @@ async function setCamFeed_ctx(stream){
 	camFeed_cnv.height = camFeedA_vid.videoHeight;
 
 	const renderCnv = ()=>{
+		if(!receivedCamFeedB)return;
 		camFeed_ctx.globalAlpha = 1.0;
 		camFeed_ctx.drawImage(camFeedB_vid,0,0,camFeed_cnv.width,camFeed_cnv.height);
 		camFeed_ctx.globalCompositeOperation='difference';

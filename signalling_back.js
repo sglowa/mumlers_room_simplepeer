@@ -10,53 +10,37 @@ const socketToRoom = {}; //collection of all sockets, {socketId:roomId, ...}
 const roomLimit = 10;
 
 module.exports = (io)=>{
+	console.log('running signalling front')
 	const signalServer = require('simple-signal-server')(io);
 
 	io.engine.generateId = req =>{
 		const parsedUrl = new url.parse(req.url);
 		const lastId = (new url.URLSearchParams(parsedUrl.search)).get('lastId')
+		console.log('generating id :', lastId);
 		if (lastId) return lastId;
 		return base64id.generateId();
 	}
-
+	// orange this should run once !!!! runs ????
 	io.on('connection', socket => {
 		console.log(socket);
-		socket.on('check room',(name,purpose)=>{		
-			console.log(name,purpose);
-			let errors = validateInput(name);
-			errors = errors.concat(sanitizeInput(name));
-			if(errors.length){
-				socket.emit('check room result',{errors});
-				return;
-			}
-			const roomExists = rooms[name] ? true : false;
-			const isFull = roomExists ? rooms[name].length == roomLimit ? true : false : false;
-			socket.emit('check room result',{roomExists,isFull,purpose});
-			return;
-		});		
 
-//purple		
+		if (!socket.listeners('check room').length){
+			console.log('binding check room');
+			socket.on('check room',(name,purpose)=>checkRoomHandler(name,purpose,socket));	
+		}else{ console.log('check room already bound')}
+
+		if(socket.listeners('disconnect').length<2){
+			console.log('binding disconnect');
+			socket.on('disconnect',reason=>removeFromRoom(reason,socket));
+		}else{console.log('disconnect already bound')}					
+
+		if(!socket.listeners('getNextPartner').length){
+			console.log('binding getNextPartner')
+			socket.on('getNextPartner',()=>nextPartnerHandler(socket));
+		}else{console.log('getNextPartner already bound')}
+
+		//purple		
 /*dbg*/	socket.on('get socket id',()=>console.log(socket.id));
-
-		socket.on('disconnect',reason=>{
-			console.log(socket.id,'socket disconnected',reason);	
-			if (['client namespace disconnect','transport close'].includes(reason)){
-				console.log('socket disconnected');
-				removeFromRoom(socket);
-				return;
-			}
-		});
-
-		// i need to see how to update socket id on reconnect  
-
-		// click Leave Room >> client namespace disconnect
-		// refresh >> transport close
-		// comcast throttle >> disconnected ping timeout
-
-		socket.on('getNextPartner',()=>{
-			const nextPartnerId = getNextUser(socket.id);
-			socket.emit('nextPartner',nextPartnerId);
-		});
 
 	});
 
@@ -74,46 +58,30 @@ module.exports = (io)=>{
 		request.discover({roomName,members});
 	});
 
-	/*red! gets triggered on temporary disconnects, after which
-	peer comes back, peer connection is reestablished automatically,
-	peer's signalClient has the same id, but new socket with a new id*/
-
-	/*red! i should set a promise with timeout that awaits a response from 
-	the disconnected peer > 
-	• if response is given, that means that the peer was disconnected temporarily and her socket if needs to be updated
-	• if no response given, that means that the peer has left for sure and can be safely removed from room. 
-	*/
 	signalServer.on('disconnect',socket=>{
 		console.log('peer disconnected');		
 	});
-
-	// or fuck this^
-
-	// on client > on socket connection, store socket id in var last_id
-	// on re-connection > check if last_id != null 
-	// if (last_id != null) > socket fire event('reconnected', {last_id})
-
-	// on server > on peer disconnect > setTimeout + listen for reconnected ev.
-	// if time out > consider socket closed, bump from room arr
-	// if onReconnected fired check if event.id == socket.id 
-	// if (event.id == socket.id ) > stop timeout, reassign in room 
-		// ^ old socket.id = id of socket that fired matching onReconnected.
-
-
-	//OR! ^ similar, but > check if connecting socket is reconnecing, if so assign it its old id
-		//https://stackoverflow.com/questions/18294620/reuse-socket-id-on-reconnect-socket-io-node-js
-	//PLUS listen for disconnects on socket (not signalServ), check for reason in callback
-		// ^ socket.on('disconnect',reason=>if(reason=manually closed, lost connection) remove from room);
-		//https://socket.io/docs/v3/server-api/index.html#Event-%E2%80%98disconnect%E2%80%99
-
-	// OR! it's actually simpler and i should set socket, io server and peer connection timeouts to the same 
-	// signalClient timeout = 33333, io server > pingTimeout && upgradeTimeout, socket > reconnectionDelay
 
 	signalServer.on('closed',socket=>{
 		console.log('CLOSED EVE HANDLED');
 	})	
 
-	function removeFromRoom(socket){
+	function checkRoomHandler(name,purpose,socket){
+		console.log(name,purpose);
+		let errors = validateInput(name);
+		errors = errors.concat(sanitizeInput(name));
+		if(errors.length){
+			socket.emit('check room result',{errors});
+			return;
+		}
+		const roomExists = rooms[name] ? true : false;
+		const isFull = roomExists ? rooms[name].length == roomLimit ? true : false : false;
+		socket.emit('check room result',{roomExists,isFull,purpose});
+		return;
+	}
+
+	function removeFromRoom(reason,socket){ // !!! i think this can be moved outside of the function
+		console.log(socket.id,'socket disconnected',reason);	
 		const client = socket.id;
 		const roomName = socketToRoom[socket.id];
 		if(rooms[roomName]){
@@ -125,11 +93,14 @@ module.exports = (io)=>{
 				delete rooms[roomName];
 			}
 		}
+		return;
 	}
 
+	function nextPartnerHandler(socket){
+		const nextPartnerId = getNextUser(socket.id);
+		socket.emit('nextPartner',nextPartnerId);
+	}
 };
-
-
 
 function getPrevUser(memberId){
 	const name = socketToRoom[memberId];
@@ -145,12 +116,15 @@ function getPrevUser(memberId){
 
 function getNextUser(memberId){
 	const name = socketToRoom[memberId];
-	if (rooms[name]) {
+	if (rooms[name]) {		
 		const room = Array.from(rooms[name]);
 		const member_i = room.indexOf(memberId);
 		let partner_i = member_i + 1;
 		partner_i = partner_i%room.length;
+		console.log(`fetching new partner: ${memberId} => ${room[partner_i]}`);
 		return room[partner_i];
+	}else{
+		console.warn("couldn't find room");
 	}
 } // returns NextUserId
 

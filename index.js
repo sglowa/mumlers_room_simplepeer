@@ -1,5 +1,7 @@
 /*jshint esversion:6*/
-
+const Bowser = require("bowser");
+const helpers = require('./helpers');
+const messages = require('./messages');
 // old navigator.getUserMedia
 // navigator.getUserMedia = ( navigator.getUserMedia ||
 //                        navigator.webkitGetUserMedia ||
@@ -7,6 +9,7 @@
 //                        navigator.msGetUserMedia);
 
 		//#0000ff change routes && index.pug 
+
 const constraints = {
 	audio : true,
 	video : {
@@ -23,47 +26,29 @@ const constraints = {
 	}
 };
 
+const browser = Bowser.getParser(window.navigator.userAgent)
+
+if(!(browser.getBrowserName() == "Chrome" || browser.getBrowserName() == "Firefox")){
+	messages.wrongBrowser('browser', browser);
+	console.log('please use Chrome or Firefox');
+	return;
+}
+
+if(browser.getPlatform().type != "desktop"){
+	messages.wrongBrowser('platform', browser);
+	console.log('please use desktop version of Chrome or Firefox');
+	return;
+}
+
 navigator.mediaDevices.getUserMedia(constraints)
 	.then(async myStream =>{
-		document.querySelector('span.mediaReq').parentElement.removeChild(document.querySelector('span.mediaReq'));
-		/*
-		// #872735#872735#872735 forTesting
-		const replaceStreamForTesting = async x=>{
-			const vtOld = myStream.getVideoTracks()[0];
-			const tempVid = document.createElement('video');
-			tempVid.src = `./tempVideos/${x}.mp4`;
-			tempVid.loop = true;
-			await tempVid.play();
-			const tempStr = tempVid.captureStream();
-			const vtNew = tempStr.getVideoTracks()[0];
-			myStream.removeTrack(vtOld);
-			myStream.addTrack(vtNew);
-		};
-		const btn = document.createElement('button');
-		btn.innerText = 'change track';
-		const menu = document.createElement('select');
-		for (var i = 1; i <= 4; i++) {
-			let option = document.createElement('option');
-			option.value = i+'';
-			option.innerText = option.value;
-			menu.appendChild(option);
-		}
-		document.body.appendChild(menu);
-		document.body.appendChild(btn);
-		btn.onclick = ()=>{
-			replaceStreamForTesting(menu.value);
-		};
-		// #872735#872735#872735 */
+		helpers.removeOnce(document.querySelector('span.mediaReq'));		
 
-		let lastId = ''; 
-		const  socket = io(undefined,{query: {lastId}});	
-		socket.on('connect',()=> lastId = lastId ? lastId : socket.id);
-		socket.on('reconnect_attempt',()=>{
-			socket.io.opts.query = {lastId}
-		})
+		const {socket,lastId} = initSocket();
+
 		const roomForm = require('./roomForm.js');			
 		const roomName = await roomForm(socket);
-		// #0000ff ^ i need to style this. 
+		reconnectOpts(lastId,roomName,socket);
 		const signalling_f = require('./signalling_front.js');
 		const handleStreams = require('./handleStream.js');
 		// #0000ff get waiting for others...
@@ -71,15 +56,23 @@ navigator.mediaDevices.getUserMedia(constraints)
 		signalling_f(socket,roomName,myStream,handleStreams);		
 		// handleStreams(socket,peersRef,myStream);
 
-	}).catch(err=>{
-		document.querySelector('span.mediaReq').parentElement.removeChild(document.querySelector('span.mediaReq'));
-		// #0000ff serve error page.
-		const errMsg = document.createElement('span'); 
-		errMsg.className = 'err';
-		errMsg.innerHTML = '<span>Error</span><br><span>This site requires a webcam and a microphone.<br>Please, refresh the website and enable webcam and mic.</span>';
-		const mainContent = document.querySelector('.main-content');
-		mainContent.appendChild(errMsg);
-	});
+}).catch(err=>{
+	messages.mediaNavFail();	
+});
+
+function initSocket(){
+	let lastId = ''; 
+	const socket = io(undefined,{query: {lastId}});	
+	socket.on('connect',()=> lastId = lastId ? lastId : socket.id);
+	return {socket,lastId}
+}
+
+function reconnectOpts(lastId,roomName,socket){
+	socket.on('reconnect_attempt',()=>{
+		console.log('reconnecting attempts');
+		socket.io.opts.query = {lastId,roomName};
+	})
+}
 
 
 /*

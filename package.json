@@ -20,6 +20,7 @@
     "watchify": "^3.11.1"
   },
   "dependencies": {
+    "bowser": "^2.11.0",
     "browserify": "^16.5.2",
     "express": "^4.17.1",
     "getusermedia": "^2.0.1",

@@ -1,4 +1,9 @@
 /*jshint esversion:6*/
+
+// NOT USING THIS, POSSIBLY SAFE TO RM (NOT 100% sure though)
+// NOT USING THIS, POSSIBLY SAFE TO RM (NOT 100% sure though)
+// NOT USING THIS, POSSIBLY SAFE TO RM (NOT 100% sure though)
+
 let io = require('socket.io');
 const helpers = require('./helpers.js');
 let roomArr = [];

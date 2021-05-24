@@ -6,7 +6,7 @@ let shareScreenEnabled = false;
 let roomNameStr;
 
 let chatInterfaceHtml;
-const constructInterface = (signalClient,myStream,camFeedComp_audio,peersRef,)=>{
+const constructInterfaceOnce = (signalClient,myStream,camFeedComp_audio,peersRef,)=>{
 	if(chatInterfaceHtml!=null)return;
 	chatInterfaceHtml = helpers.httpGet('./chatInterface');
 	chatInterfaceHtml = helpers.parseHtmlRes(chatInterfaceHtml);
@@ -107,10 +107,25 @@ const rmInterfaceHtml = ()=>{
 
 const setRoomName = (name)=>{
 	roomNameStr = name;
+	const div = document.createElement('div');
+	div.className = 'top';
+	const nameDiv = document.createElement('div');
+	nameDiv.className = 'roomName';
+	nameDiv.classList.add('fading');
+	nameDiv.innerText = name;
+	div.appendChild(nameDiv);
+	document.querySelector('.main-content').appendChild(div);
+	nameDiv.addEventListener('click',()=>{
+		navigator.clipboard.writeText(name);
+		if(nameDiv.classList.contains('roomAnim'))nameDiv.classList.toggle('roomAnim');
+		setTimeout(()=>{
+			nameDiv.classList.toggle('roomAnim');	
+		},10);
+	});
 };
 
 module.exports = {
-	constructInterface,
+	constructInterfaceOnce,
 	setNextPartner,
 	rmInterfaceHtml,
 	setRoomName

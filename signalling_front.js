@@ -1,9 +1,10 @@
 /*jshint esversion:6*/
-window.getMembers = ()=>{ // for debugging
-	console.log(peersRef);
-};
 
 const helpers = require('./helpers');
+const messages = require('./messages');
+const chatInterface = require('./chatInterface');
+const SimpleSignalClient = require('simple-signal-client');
+
 const peersRef = {array:[]}; // locally stored array of peers in the room [{peerId:"",peer:{}}]
 
 // viagenie stun/turn config
@@ -59,13 +60,11 @@ let config  = {'iceServers': [
 				   		'turn:157.230.114.158:3478?transport=udp',
 				   		'turn:157.230.114.158:3478?transport=tcp',
 				   		'turn:157.230.114.158:5349?transport=tcp',
-				   	], //?transport=tcp
+				   	], 
 				   	username: 'test',
 				    credential: 'test123'}
 				    ]
 				};
-
-
 
 // TRYING TO GET CONFIG VIA API, DOESNT WOOORKKK... BUT SHOULD !
 // A PROBLEM WITH HTTPS.REQUEST < socket err
@@ -82,29 +81,26 @@ const options = {
 	trickle:false,
 	iceTransportPolicy: 'relay',
 };
-let currentRoom; 
-const SimpleSignalClient = require('simple-signal-client');
 
-module.exports = (socket,name,myStream,handleStreams)=>{	
+module.exports = (socket,roomName,myStream,handleStreams)=>{	
 	console.log('running signalling front');
-	let msgElem, roomNameElem;
+	let msgElem; 
 	
 	const signalClient = new SimpleSignalClient(socket,{connectionTimeout:33333});
 	
 	async function connectToPeer(peerId){
 		console.log('connecting to peer (joiner)',signalClient);
-		const {peer} = await signalClient.connect(peerId,currentRoom,options); // why am i sending current room ?
-		peersRef.array.push({peer,peerId});
+		const {peer} = await signalClient.connect(peerId,roomName,options); // why am i sending current room ?
+		peersRef.array.push({peer,peerId}); // add myself
 		console.log('connected to peer', peer);		
 		helpers.removeOnce(msgElem);
-		// helpers.removeOnce(roomNameElem);
-		handleStreams(signalClient,peer,peersRef,myStream,name);
+		handleStreams(signalClient,peer,peersRef,myStream,roomName);
 	}
 
 	function joinRoom(discoveryData){
-		roomNameElem = displayName(name);		
-		if(discoveryData.roomName == name){
-			msgElem = joiningMsg(name);
+		chatInterface.setRoomName(roomName);		
+		if(discoveryData.roomName == roomName){
+			msgElem = messages.joiningMsg(roomName);
 			console.log(discoveryData);
 			signalClient.removeListener('discover',joinRoom);
 			discoveryData.members.forEach(peerId=>{
@@ -112,12 +108,11 @@ module.exports = (socket,name,myStream,handleStreams)=>{
 			});
 			if(!discoveryData.members.length){
 				helpers.removeOnce(msgElem);
-				msgElem = waitingMsg();
+				msgElem = messages.waitingMsg();
 			}			
 		}
 	}
 
-	currentRoom = name;
 	signalClient.on('request',async request=>{
 		console.log('connecting to peer (member)',signalClient);
 		const {peer} = await request.accept(null,options);
@@ -127,61 +122,10 @@ module.exports = (socket,name,myStream,handleStreams)=>{
 		handleStreams(signalClient,peer,peersRef,myStream);
 	});
 	signalClient.addListener('discover',joinRoom);
-	signalClient.discover(name);
+	signalClient.discover(roomName);
 };
 
-function joiningMsg(name){
-	const msg = document.createElement('span');
-	document.querySelector('.main-content').appendChild(msg);
-	msg.className = 'info joining';
-	msg.innerText = `Joining ${name}.`;
-	let count = 0;
-	const interval = setInterval(()=>{
-		if(count==2){
-			count=0;
-			msg.innerText = `Joining ${name}.`;
-			return;
-		}
-		msg.innerText+='.';
-		count++;
-	},500);
-	return msg;
-}
-
-function waitingMsg(){
-	const msg = document.createElement('span');
-	document.querySelector('.main-content').appendChild(msg);
-	msg.className = 'info waiting';
-	msg.innerText = `Waiting for someone.`;
-	let count = 0;
-	const interval = setInterval(()=>{
-		if(count==2){
-			count=0;
-			msg.innerText = `Waiting for someone.`;
-			return;
-		}
-		msg.innerText+='.';
-		count++;
-	},500);
-	return msg;
-}
-
-function displayName(name){
-	require('./chatInterface').setRoomName(name);
-	const div = document.createElement('div');
-	div.className = 'top';
-	nameDiv = document.createElement('div');
-	nameDiv.className = 'roomName';
-	nameDiv.classList.add('fading');
-	nameDiv.innerText = name;
-	div.appendChild(nameDiv);
-	document.querySelector('.main-content').appendChild(div);
-	nameDiv.addEventListener('click',()=>{
-		navigator.clipboard.writeText(name);
-		if(nameDiv.classList.contains('roomAnim'))nameDiv.classList.toggle('roomAnim');
-		setTimeout(()=>{
-			nameDiv.classList.toggle('roomAnim');	
-		},10);
-	});
-	return div;
-}
+// ~~~~~~~~ debugging ~~~~~~~~~~~~~~
+window.getMembers = ()=>{ // for debugging
+	return peersRef;
+};
