@@ -1,17 +1,29 @@
 /*jshint esversion:6*/
 const fs = require('fs');
-const express = require('express');
-const http = require('http');
-const pug = require('pug');
 const path = require('path');
-let io = require('socket.io');
+const pug = require('pug');
+
+const httpsLocalhost = require('https-localhost')();
+const httpolyglot = require('httpolyglot');
+const express = require('express');
 const app = express();
+let io = require('socket.io');
+
 const port = process.env.PORT || 8080;
 require('./routes.js')(app);
-const httpServer = http.createServer(app);
-httpServer.listen(port, ()=>{
-	console.log('listening on port 8080 !');
-});
+
+httpsLocalhost.getCerts().then(certs=>{
+
+	const httpsServer = httpolyglot.createServer(certs,app);
+	httpsServer.listen(port, ()=>{
+		console.log('listening on port 8080 !');
+	});
+	io = io(httpsServer);
+	const signalling_b = require('./signalling_back.js')
+	signalling_b(io);
+
+})
+
 
 // ⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤
 // !!! GETTING THE ICE  
@@ -48,8 +60,6 @@ httpServer.listen(port, ()=>{
 // httpreq.end(console.log('request ended'));
 // ⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤
 
-io = io(httpServer);
-const signalling_b = require('./signalling_back.js')
-signalling_b(io);
+
 
 
