@@ -18,7 +18,10 @@ httpsLocalhost.getCerts().then(certs=>{
 	httpsServer.listen(port, ()=>{
 		console.log('listening on port 8080 !');
 	});
-	io = io(httpsServer);
+	io = io(httpsServer,{
+		pingTimeout:20000,
+		upgradeTimeout: 30000
+	});
 	const signalling_b = require('./signalling_back.js')
 	signalling_b(io);
 

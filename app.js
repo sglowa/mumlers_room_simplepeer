@@ -57,7 +57,10 @@ httpsServer.listen(port, ()=>{
 // httpreq.end(console.log('request ended'));
 // ⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤
 
-io = io(httpsServer);
+io = io(httpsServer,{
+		pingTimeout:20000,
+		upgradeTimeout: 30000
+	});
 const signalling_b = require('./signalling_back.js')
 signalling_b(io);
 

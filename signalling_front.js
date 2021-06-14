@@ -126,6 +126,6 @@ module.exports = (socket,roomName,myStream,handleStreams)=>{
 };
 
 // ~~~~~~~~ debugging ~~~~~~~~~~~~~~
-window.getMembers = ()=>{ // for debugging
+window.debugging.getMembers = ()=>{ // for debugging
 	return peersRef;
 };

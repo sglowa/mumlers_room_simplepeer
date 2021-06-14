@@ -2,6 +2,7 @@
 const path = require('path');
 const express = require('express');
 const pug = require('pug');
+const fs = require('fs');
 // const peer_rooms = require('./peer_rooms.js');
 
 module.exports = (app) => {
@@ -13,11 +14,17 @@ module.exports = (app) => {
 
 	app.use(express.json());
 	app.get('/', (req,res)=>{
-		res.render('index');
+		fs.readdir(path.join(__dirname,'public/assets/logo'), (err, files)=>{
+			files = files.filter(f => {
+				return path.extname(f) === '.png'
+			});
+			const logo = files[Math.floor(Math.random()*files.length)];
+			res.render('index', {logo});
+		})	
 	});
 
 	app.get('/form',(req,res)=>{
-		res.send(pug.renderFile('views/form.pug'));		
+		res.send(pug.renderFile('views/form.pug'));
 	});
 
 	app.get('/chatInterface',(req,res)=>{

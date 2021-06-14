@@ -87,6 +87,7 @@ div.main-content > .err {
 .logo#icon{
 	margin-right: 40px;
 	right: 0%;
+	mix-blend-mode: hard-light;
 }
 
 #form-wrapper {

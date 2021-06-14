@@ -22,7 +22,7 @@ let nextPartnerId;
 let receivedCamFeedB = false;
 
 //orange this is called on each peer connection  
-module.exports = async (signalClient,peer,peersRef,myStream)=>{	
+module.exports = async (signalClient,peer,peersRef,myStream,roomName)=>{	
 
 	const newNextPartner = newNextPartnerId=>{
 		if(newNextPartnerId !== nextPartnerId && newNextPartnerId != signalClient.id){
@@ -108,6 +108,35 @@ module.exports = async (signalClient,peer,peersRef,myStream)=>{
 	// orange per peer, should be per peer
 	peer.addStream(camFeedComp_stream);
 
+	// pausing streams when peer looses connection // #009999 
+	peer._pc.onconnectionstatechange = ()=>{
+		console.log('connection state changed: ', peer._pc.connectionState);
+		const {vidElem} = peersRef.array.find(i=>i.peer == peer)
+		if(peer._pc.connectionState == 'disconnected'){
+			// pause peers feed
+			if(vidElem && !vidElem.paused)vidElem.pause()
+
+			// if peer is my partner => pause my feed (by reassignign renderCnv() )
+		}
+		if(peer._pc.connectionState == 'connected'){
+			if(vidElem && vidElem.paused)vidElem.play();
+		}
+	}
+
+	peer.on('error',e=>{
+		console.log('peer error: ',e);
+		signalClient.socket.once('is socket in room', r=>{
+			if(!r){
+				console.log('socket not in room');	
+			}else{
+				console.log('socket is in room');
+				console.log(r.name, r.members);
+			}
+		})
+		signalClient.socket.emit('is socket in room');
+	})
+
+
 	// orange hooks per peer, should hook once || DONE! << need to test 
 	// orange but also : removes leaving peer from array; then
 	//	calls newNextPartner
@@ -117,6 +146,7 @@ module.exports = async (signalClient,peer,peersRef,myStream)=>{
 			if(i>=0){
 				if(peersRef.array[i].vidElem)peersRef.array[i].vidElem.pause();
 				if(peersRef.array[i].vidNode)peersRef.array[i].vidNode.destroy();
+				if(peersRef.array[i].peer)peersRef.array[i].peer.destroy();
 				peersRef.array.splice(i,1);
 				if(nextPartnerId == whoLeft)signalClient.socket.emit('getNextPartner');	
 			}
@@ -125,6 +155,35 @@ module.exports = async (signalClient,peer,peersRef,myStream)=>{
 			}
 		});
 	}	
+
+	if(!signalClient.socket.listeners('error').length){
+		signalClient.socket.on('error',e=>{
+			console.log('error: ', e);
+		})
+	}
+
+
+	if(!signalClient.socket.listeners('reconnect').length){
+		signalClient.socket.on('reconnect',()=>{
+			signalClient.socket.once('readmitted',()=>{
+				console.log('socket readmitted');
+			})
+			signalClient.socket.emit('readmit',roomName); //	#88ddff readmit
+			console.log('reconnect successful');
+		})
+	}
+
+	if(!signalClient.socket.listeners('reconnect_error').length){
+		signalClient.socket.on('reconnect_error',e=>{
+			console.log('reconnect_error: ', e);
+		})
+	}
+
+	if(!signalClient.socket.listeners('reconnect_failed').length){
+		signalClient.socket.on('reconnect_failed',()=>{
+			console.log('reconnect_failed: ');
+		})
+	}
 
 	window.handleStream = {
 	camFeedA_stream,
@@ -140,7 +199,7 @@ module.exports = async (signalClient,peer,peersRef,myStream)=>{
 	nextPartnerId,
 	wrapInVid : require('./helpers.js').wrapInVideo
 	};
-	window.getSocketId = ()=>{
+	window.debugging.getSocketId = ()=>{
 	 	signalClient.socket.emit('get socket id');
 	};
 	//for debugging;
@@ -168,7 +227,8 @@ async function setCamFeed_ctx(stream){
 	camFeed_cnv.width = camFeedA_vid.videoWidth;
 	camFeed_cnv.height = camFeedA_vid.videoHeight;
 
-	const renderCnv = ()=>{
+	const renderCnvSuspended = ()=>{};
+	const renderCnvNormal = ()=>{
 		if(!receivedCamFeedB)return;
 		camFeed_ctx.globalAlpha = 1.0;
 		camFeed_ctx.drawImage(camFeedB_vid,0,0,camFeed_cnv.width,camFeed_cnv.height);
@@ -179,6 +239,7 @@ async function setCamFeed_ctx(stream){
 		camFeed_ctx.globalAlpha = 0.5;
 		camFeed_ctx.drawImage(camFeedA_vid,0,0,camFeed_cnv.width,camFeed_cnv.height);
 	};
+	let renderCnv = renderCnvNormal;
 
 	let render = ()=>{
 		renderCnv();

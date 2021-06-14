@@ -10,6 +10,8 @@ const messages = require('./messages');
 
 		//#0000ff change routes && index.pug 
 
+// helpers.saveConsoleLog(); // purple debugging
+
 const constraints = {
 	audio : true,
 	video : {
@@ -44,36 +46,37 @@ navigator.mediaDevices.getUserMedia(constraints)
 	.then(async myStream =>{
 		helpers.removeOnce(document.querySelector('span.mediaReq'));		
 
-		const {socket,lastId} = initSocket();
+		const socket = initSocket();
 
 		const roomForm = require('./roomForm.js');			
 		const roomName = await roomForm(socket);
-		reconnectOpts(lastId,roomName,socket);
+		reconnectOpts(roomName,socket);
 		const signalling_f = require('./signalling_front.js');
 		const handleStreams = require('./handleStream.js');
 		// #0000ff get waiting for others...
 		// #0000ff get |chatInterface:roomLeft|disconnected|shareScreen|mute|roomName
 		signalling_f(socket,roomName,myStream,handleStreams);		
-		// handleStreams(socket,peersRef,myStream);
-
 }).catch(err=>{
 	messages.mediaNavFail();	
 });
 
+let lastId = ''; 
 function initSocket(){
-	let lastId = ''; 
 	const socket = io(undefined,{query: {lastId}});	
 	socket.on('connect',()=> lastId = lastId ? lastId : socket.id);
-	return {socket,lastId}
+	return socket;
 }
 
-function reconnectOpts(lastId,roomName,socket){
+function reconnectOpts(roomName,socket){
 	socket.on('reconnect_attempt',()=>{
-		console.log('reconnecting attempts');
-		socket.io.opts.query = {lastId,roomName};
+		// console.log('reconnecting attempts');
+		console.count('reconnect attempt')
+		socket.io.opts.query = {lastId};
+		// socket.emit('reconnect_attempt',{lastId,roomName});
 	})
 }
 
+window.debugging = {};
 
 /*
 flow:
