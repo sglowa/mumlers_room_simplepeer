@@ -116,7 +116,7 @@ function removeFromRoom(reason,socket,io){
 
 	const timeout = setTimeout(()=>{
 		socket.removeAllListeners('reconnect_attempt');
-		console.log('socket reconnection timeout');
+		console.log(`socket ${socket.id} reconnection timeout`);
 	},20000);
 	socket.on('reconnect_attempt',(lastId,name)=>{
 		console.log(`socket ${lastId} tries to reenter room ${name}`);

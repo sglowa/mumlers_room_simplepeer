@@ -181,6 +181,15 @@ const saveConsoleLog = ()=>{
 	})(console)
 }
 
+const asyncDelay=(ms)=>{	
+	return new Promise((resolve,reject)=>{
+		if(!Number.isInteger(ms))reject(new Error('asyncDelay failed, param is not a number!'));
+		setTimeout(()=>{
+			resolve();
+		},ms)
+	})
+}
+
 // using es6 shorthand
 module.exports = {
 	httpGet,
@@ -193,5 +202,6 @@ module.exports = {
 	parseHtmlRes,
 	removeOnce,
 	getPageVis,
-	saveConsoleLog
+	saveConsoleLog,
+	asyncDelay
 };

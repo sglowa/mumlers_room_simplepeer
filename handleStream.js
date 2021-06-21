@@ -25,19 +25,56 @@ let receivedCamFeedB = false;
 module.exports = async (signalClient,peer,peersRef,myStream,roomName)=>{	
 
 	const newNextPartner = newNextPartnerId=>{
+		console.log('getting new partner: ', newNextPartnerId);
 		if(newNextPartnerId !== nextPartnerId && newNextPartnerId != signalClient.id){
 			if(nextPartnerId && peersRef.array.find(i=>i.peerId==nextPartnerId) != null){ // only if there was already a partner and partner hasn't just left
 				const oldNextPartner = peersRef.array.find(p=>p.peerId == nextPartnerId);
-				if(oldNextPartner){
+				if(oldNextPartner){ // <- this is redundant, i'm already cheching for that in prev if stat.
 					oldNextPartner.peer.removeStream(camFeedA_stream); // < making sure oldPartner hasnt disconnected
 					console.log('stream removed from old partner')	
 				} 
 			}			
 			const newNextPartner = peersRef.array.find(p=>p.peerId == newNextPartnerId);
+			console.log('pulling newNextPartner object:', newNextPartner);
+			try{
+				if(newNextPartner.peer){
+					newNextPartner.peer.addStream(camFeedA_stream);
+					receivedCamFeedB = false; // freezing camFeedComp till camFeedB is received
+					console.log('sending my stream to partner');
+				}else{
+					newNextPartner.onPeerConnected = ()=>{
+						newNextPartner.peer.addStream(camFeedA_stream);
+						receivedCamFeedB = false; // freezing camFeedComp till camFeedB is received
+						console.log('sending my stream to partner');
+						newNextPartner.onPeerConnected = '';
+					}
+				}
+			}catch(err){
+				console.error(err);
+				console.log(`track enabled ${camFeedA_stream.getVideoTracks()[0].enabled}`);
+				camFeedA_stream = myStream.clone();
+				newNextPartner.peer.addStream(camFeedA_stream);
+			}
+
 			// await Promise.all([IceConnectionPromise(peer),trackUnmutePromise(stream)]);
-/*red*/		newNextPartner.peer.addStream(camFeedA_stream); // < option : i'm not updating stream sent to partner
-			receivedCamFeedB = false; // freezing camFeedComp till camFeedB is received
-			console.log('sending my stream to partner');
+			/*red*/
+			// newNextPartner.peer.addStream(camFeedA_stream); // < option : i'm not updating stream sent to partner
+			// receivedCamFeedB = false; // freezing camFeedComp till camFeedB is received
+			// console.log('sending my stream to partner');
+			/*red*/
+			// try{
+			// 	newNextPartner.peer.addStream(camFeedA_stream); // < option : i'm not updating stream sent to partner
+			// 	receivedCamFeedB = false; // freezing camFeedComp till camFeedB is received
+			// 	console.log('sending my stream to partner');
+			// }catch(err){
+			// 	console.error(err);
+			// 	console.log(`track enabled ${camFeedA_stream.getVideoTracks()[0].enabled}`);
+			// 	setTimeout(()=>{
+			// 		console.log(`track enabled ${camFeedA_stream.getVideoTracks()[0].enabled}`);
+			// 		newNextPartner.peer.addStream(camFeedA_stream); // < option : i'm not updating stream sent to partner
+			// 	},3000)			
+			// }
+			/*red*/		
 		}
 		nextPartnerId = newNextPartnerId;
 		chatInterface.setNextPartner(nextPartnerId);
@@ -49,7 +86,7 @@ module.exports = async (signalClient,peer,peersRef,myStream,roomName)=>{
 	console.log('handle stream called');
 	// orange called once, should be once
 	if(!camFeedA_stream){
-		camFeedA_stream = myStream;	
+		camFeedA_stream = myStream.clone();	
 		camFeedComp_audio.data = camFeedA_stream.getAudioTracks()[0];
 		if(camFeedComp_audio.data){
 			camFeedComp_stream.addTrack(camFeedComp_audio.data);
@@ -80,6 +117,8 @@ module.exports = async (signalClient,peer,peersRef,myStream,roomName)=>{
 		console.log('receiving Comp Stream',stream);
 		addCompNode(stream).then(r=>{	// <<==▼▼ adding CompVidElem to memberObject in peersRef[] (to easily delete on peer left)		
 			const p = peersRef.array.find(p=>p.peer == peer);
+			if(!p) return; // red why is it triggered on peer leave ?? the rest of the 'once' eventHandler isn't ... 
+			console.log('assigning vids to Member');
 			Object.assign(p,r);
 		}); 
 
@@ -124,7 +163,7 @@ module.exports = async (signalClient,peer,peersRef,myStream,roomName)=>{
 	}
 
 	peer.on('error',e=>{
-		console.log('peer error: ',e);
+		console.error('peer error: ',e);
 		signalClient.socket.once('is socket in room', r=>{
 			if(!r){
 				console.log('socket not in room');	
@@ -207,6 +246,7 @@ module.exports = async (signalClient,peer,peersRef,myStream,roomName)=>{
 
 
 async function addCompNode(stream){	
+	console.log('creating comp node');
 	const vidElem = document.createElement('video'); // << this needs to be destroyed on peer leaves
 	vidElem.srcObject = stream;
 	await vidElem.play();

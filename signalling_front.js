@@ -7,6 +7,28 @@ const SimpleSignalClient = require('simple-signal-client');
 
 const peersRef = {array:[]}; // locally stored array of peers in the room [{peerId:"",peer:{}}]
 
+function Member(peerId){
+	this.peerId = peerId;
+	this.onPeerConnected = undefined;
+}
+
+Member.prototype = {
+	set peer(peer){
+		if(this.onPeerConnected)this.onPeerConnected();
+		this.peerObj = peer
+	},
+	get peer(){
+		return this.peerObj;
+	}
+}
+
+// ^^ constructor with id, 
+// ^^ setter for peer obj
+// ^^ callback for setter
+// ^^ obj for  
+
+
+
 // viagenie stun/turn config
 // let config  = {'iceServers': [
 // 				   { urls: ['stun:stun.l.google.com:19302']},
@@ -89,12 +111,19 @@ module.exports = (socket,roomName,myStream,handleStreams)=>{
 	const signalClient = new SimpleSignalClient(socket,{connectionTimeout:33333});
 	
 	async function connectToPeer(peerId){
-		console.log('connecting to peer (joiner)',signalClient);
-		const {peer} = await signalClient.connect(peerId,roomName,options); // why am i sending current room ?
-		peersRef.array.push({peer,peerId}); // add myself
-		console.log('connected to peer', peer);		
-		helpers.removeOnce(msgElem);
-		handleStreams(signalClient,peer,peersRef,myStream,roomName);
+		try{
+			console.log('connecting to peer (joiner)',signalClient);
+			let i = peersRef.array.push(new Member(peerId)); // green
+			const {peer} = await signalClient.connect(peerId,roomName,options); // red i need to catch an error here // why am i sending current room ? 
+			peersRef.array[i-1].peer = peer; // green
+			//peersRef.array.push({peer,peerId}); // green 
+			console.log(`connected to peer: ${peerId}`, peer);		
+			helpers.removeOnce(msgElem);
+			handleStreams(signalClient,peer,peersRef,myStream,roomName);
+		}catch(err){
+			console.error(err);
+			// console.log(peer);
+		}		
 	}
 
 	function joinRoom(discoveryData){
@@ -115,9 +144,11 @@ module.exports = (socket,roomName,myStream,handleStreams)=>{
 
 	signalClient.on('request',async request=>{
 		console.log('connecting to peer (member)',signalClient);
-		const {peer} = await request.accept(null,options);
-		peersRef.array.push({peer,peerId:request.initiator});
-		console.log('connected to peer', peer);
+		let i = peersRef.array.push(new Member(request.initiator)); // green
+		const {peer} = await request.accept(null,options); // red i need to catch an error here
+		peersRef.array[i-1].peer = peer; // green
+		//peersRef.array.push({peer,peerId:request.initiator}); // green
+		console.log(`connected to peer: ${request.initiator}`, peer);
 		helpers.removeOnce(msgElem);
 		handleStreams(signalClient,peer,peersRef,myStream);
 	});
