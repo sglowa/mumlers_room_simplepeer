@@ -1,17 +1,6 @@
 /*jshint esversion:6*/
-const Bowser = require("bowser");
 const helpers = require('./helpers');
 const messages = require('./messages');
-// old navigator.getUserMedia
-// navigator.getUserMedia = ( navigator.getUserMedia ||
-//                        navigator.webkitGetUserMedia ||
-//                        navigator.mozGetUserMedia ||
-//                        navigator.msGetUserMedia);
-
-		//#0000ff change routes && index.pug 
-
-// helpers.saveConsoleLog(); // purple debugging
-
 const constraints = {
 	audio : true,
 	video : {
@@ -28,37 +17,58 @@ const constraints = {
 	}
 };
 
-const browser = Bowser.getParser(window.navigator.userAgent)
+// purple debugging < save client console.log to file;
+// helpers.saveConsoleLog(); 
 
-if(!(browser.getBrowserName() == "Chrome" || browser.getBrowserName() == "Firefox")){
-	messages.wrongBrowser('browser', browser);
-	console.log('please use Chrome or Firefox');
-	return;
+
+function extraEntryPoint(normalEntryPoint){
+	if(!document.currentScript.hasAttribute('extra')){
+		normalEntryPoint();
+		return;
+	}
+
+	console.log(document.currentScript.getAttribute('extra'))
+	const extraEntryPoints = {
+		schedule:()=>{
+			const {showPopUp,showSchedule} = require('./schedule_src/schedule_f.js');
+			showPopUp('/schedulePopUp',()=>{showSchedule(isCompatible)},()=>{isCompatible()});
+		}
+	}
+	const extra = document.currentScript.getAttribute('extra');
+	extraEntryPoints[extra]();
+}
+extraEntryPoint(isCompatible);
+
+function isCompatible(){
+	try{
+		helpers.checkPlatform(document.querySelector('span.mediaReq'));
+		startCam();
+	}catch(e){
+		console.log(e);
+		return;
+	}
 }
 
-if(browser.getPlatform().type != "desktop"){
-	messages.wrongBrowser('platform', browser);
-	console.log('please use desktop version of Chrome or Firefox');
-	return;
+function startCam(){
+	document.querySelector('span.mediaReq').style.display = "unset";
+	navigator.mediaDevices.getUserMedia(constraints)
+		.then(async myStream =>{
+			helpers.removeOnce(document.querySelector('span.mediaReq'));		
+
+			const socket = initSocket();
+
+			const roomForm = require('./roomForm.js');			
+			const roomName = await roomForm(socket);
+			reconnectOpts(roomName,socket);
+			const signalling_f = require('./signalling_front.js');
+			const handleStreams = require('./handleStream.js');
+			// #0000ff get waiting for others...
+			// #0000ff get |chatInterface:roomLeft|disconnected|shareScreen|mute|roomName
+			signalling_f(socket,roomName,myStream,handleStreams);		
+	}).catch(err=>{
+		messages.mediaNavFail();	
+	});
 }
-
-navigator.mediaDevices.getUserMedia(constraints)
-	.then(async myStream =>{
-		helpers.removeOnce(document.querySelector('span.mediaReq'));		
-
-		const socket = initSocket();
-
-		const roomForm = require('./roomForm.js');			
-		const roomName = await roomForm(socket);
-		reconnectOpts(roomName,socket);
-		const signalling_f = require('./signalling_front.js');
-		const handleStreams = require('./handleStream.js');
-		// #0000ff get waiting for others...
-		// #0000ff get |chatInterface:roomLeft|disconnected|shareScreen|mute|roomName
-		signalling_f(socket,roomName,myStream,handleStreams);		
-}).catch(err=>{
-	messages.mediaNavFail();	
-});
 
 let lastId = ''; 
 function initSocket(){

@@ -1,14 +1,14 @@
-const helpers = require('./helpers');
+const removeOnce = require('./helpers').removeOnce;
 
 const mediaReq = document.querySelector('span.mediaReq');
 const mainContent = document.querySelector('.main-content');
 
-function wrongBrowser(errType, browser){
+function wrongBrowser(errType,browser,elem){
 	const err = {
 		browser: ` Ooops, ${browser.getBrowserName()} is not supported, pls use Firefox or Chrome instead.`,
 		platform: `Ooops, looks like you're using ${browser.getPlatform().type} browser. pls use desktop version of Firefox or Chrome instead, thanks. ` 
 	}
-	helpers.removeOnce(mediaReq);
+	if(elem)removeOnce(elem);
 	// document.querySelector('span.mediaReq').parentElement.removeChild(document.querySelector('span.mediaReq'));
 	const errMsg = document.createElement('span'); 
 	errMsg.className = 'err';
@@ -18,7 +18,7 @@ function wrongBrowser(errType, browser){
 }
 
 function mediaNavFail(){
-	helpers.removeOnce(mediaReq);
+	removeOnce(mediaReq);
 	// #0000ff serve error page.
 	const errMsg = document.createElement('span'); 
 	errMsg.className = 'err';

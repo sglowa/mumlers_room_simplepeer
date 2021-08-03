@@ -190,6 +190,29 @@ const asyncDelay=(ms)=>{
 	})
 }
 
+const checkPlatform = (elem)=>{
+	const Bowser = require("bowser");
+	const messages = require("./messages.js");
+	const browser = Bowser.getParser(window.navigator.userAgent)
+
+	if(!(browser.getBrowserName() == "Chrome" || browser.getBrowserName() == "Firefox")){
+		messages.wrongBrowser('browser', browser, elem);
+		throw 'please use Chrome or Firefox';
+	}
+
+	if(browser.getPlatform().type != "desktop"){
+		messages.wrongBrowser('platform', browser, elem);
+		throw 'please use desktop version of Chrome or Firefox';
+	}
+}
+
+const retrigAnim = (el)=>{
+	if(!el.style) return;
+	el.style.animation = 'none';
+	void el.offsetHeight;
+	el.style.animation = null; 
+}
+
 // using es6 shorthand
 module.exports = {
 	httpGet,
@@ -203,5 +226,7 @@ module.exports = {
 	removeOnce,
 	getPageVis,
 	saveConsoleLog,
-	asyncDelay
+	asyncDelay,
+	checkPlatform,
+	retrigAnim
 };

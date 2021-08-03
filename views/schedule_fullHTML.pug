@@ -1,0 +1,49 @@
+//- soft launch event schedule
+doctype html
+html
+	head
+		meta(charset='utf-8')
+		meta(name = "viewport", content="width=device-width, height=device-height, initial-scale=1, shrink-to-fit=no")
+		title Mumler
+		link(rel='stylesheet' type='text/css' href='/css/bootstrap.css')
+		link(rel='stylesheet' type='text/css' href='/css/style.css')
+		link(rel='stylesheet' type='text/css' href='/css/schedule.css')
+		link(rel='stylesheet' type='text/css' href='/css/animations.css')
+	body
+		div.main-content
+			//- img.logo#name(src="../assets/logo/"+logo)
+			img.logo#icon(src="../assets/HEXAGON.png")
+			div.scheduler-wrapper
+				mixin date(day,time,seatsLeft)
+					if seatsLeft
+						li.date-item.col-5
+							p.date= day + ", "
+								br
+								|#{time}
+							p= "seats left : " + seatsLeft
+					else
+						li.date-item.col-5.full
+							p.date= day + ", "
+								br
+								|#{time}
+							p full
+				ul#schedule-table.row.justify-content-center
+					each row in rows
+						+date(row.day, row.time_CET, row.seatsLeft)
+						if rows.indexOf(row)%2==0&&rows.indexOf(row)!=rows.length-1
+							div.w-100
+				div.form-wrapper
+					div.inputs
+						input.name(type='text' placeholder="name")
+						input.email(type='text' placeholder="email")
+					div.button-wrapper
+						button.submit(type='button' disabled) submit
+						div.button-proxy
+					div#errBox
+						p(style='opacity:0 ') __
+		script(src="https://cdn.polyfill.io/v3/polyfill.min.js?features=console,document,JSON")
+		script(src="/scripts/bootstrap.js")
+		script.
+			const rows = '!{JSON.stringify(rows)}' 
+			// no need to escape, user generated input doesnt make it back to client
+		script(src="/scripts/schedule_f.js")

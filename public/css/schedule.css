@@ -1,0 +1,125 @@
+div.scheduler-wrapper{
+	width:100vw;
+	height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.5s ease-in-out;
+    opacity: 1;
+}
+
+li {
+	display: block;
+	/*margin: 0px 0px 100px;*/
+	transition: text-shadow 0.66s ease-in-out, filter 1s ease-in-out, color 0.66s ease-in-out;
+}
+
+li:not([active]){
+
+}
+
+li[active]{
+    color: white;
+  	filter: drop-shadow(0px 0px 2px #ccc) drop-shadow(0px 0px 2px #ccc) drop-shadow(0px 0px 6px #ccc) drop-shadow(0px 0px 10px #ccc);
+}
+
+li.full {
+	cursor: default;	
+}
+
+li:not(.full):hover{
+	cursor: pointer;
+}
+
+li br {
+	display: none;
+}
+
+
+ul {
+	/*flex-grow: 1;*/
+	font-family: serif;
+    font-style: italic;
+	align-content: space-evenly;
+	margin-block-start: 0;
+	margin-block-end: 0;
+	margin-inline-start: 0;
+	margin-inline-end: 0;
+	padding-left: 2rem;
+	padding-right: 2rem;
+	padding-top: 50px;
+	padding-bottom: 50px;
+	height: 100%;
+}
+
+@media (max-width:450px){
+	ul{
+		padding-left: 0;
+		padding-right: 0;
+		padding-top: 80px;
+		padding-bottom: 25px;
+		justify-content: space-around !important;
+	}
+	input[type='text']{
+		margin-bottom:0px; 
+	}
+	button{
+		margin-bottom:15px 
+	}
+}
+
+p {
+	margin: 0px 0px 10px 0px;
+}
+
+button{
+	display: block;
+	transition: background-color 0.66s ease-in-out, box-shadow 1s ease-in-out, color 0.66s ease-in-out;
+}
+
+div.button-wrapper{
+	position: relative;
+}
+
+div.button-proxy{
+	position: absolute;
+   	top: 0px;
+   	bottom: 0px;
+   	left: 0px;
+   	right: 0px;
+   	cursor:pointer;
+}
+
+.form-wrapper{
+	display:flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+	margin: 0px 0px 0px;
+}
+
+.inputs{
+	display: flex;
+	flex-direction: row;
+	justify-content: space-around;
+	margin: 0px 0px 40px;
+	width: 100%;
+}
+
+input {
+    margin: 0px 10px;
+}
+
+div#errBox{
+	/*margin-bottom: 25px;	*/
+}
+
+div#errBox > .errMsg{
+	-webkit-animation-name: fadeOpacityIn;
+	-webkit-animation-duration:5s;
+	-webkit-animation-iteration-count: 1;
+	-webkit-animation-timing-function: linear;
+	-webkit-animation-fill-mode: forwards;	
+	-webkit-animation-direction: reverse;
+}

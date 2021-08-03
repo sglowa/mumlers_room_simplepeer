@@ -5,50 +5,68 @@
 * Browsers: last 4 version
 */
 
-
 body{
 	background:#808080;
-	margin: 0px;
-	min-width: 570px;
+	/*min-width: 570px;*/
+	-webkit-font-smoothing:antialiased;
 	/*position: relative;*/
 }
 
-::-moz-selection { background: white; }
-::selection { background: white; }
+::-moz-selection{background: white; }
+::selection{background: white; }
+
+.hidden{
+	opacity: 0 !important;
+}
 
 div.main-content{
 	position: absolute;
 	bottom: 0px;
 	top: 0px;
-	min-width: 570px;
+	/*min-width: 570px;*/
 	width:100%;
 	text-align: center;
 }
 
 button{
+	all: unset;
 	font-family: monospace;
 	border-radius: 2px;
-	border: 1px solid #999;
+	/*border: 1px solid #CCC;*/
 	color: #999;
 	background-color: #CCC;
 	height: 25px;
 	width: 80px;
-	font-size: larger;
+	font-size: 1rem;
 	text-align: center;
+	margin:auto;
+	box-shadow: 0 0 8px 5px #ccc, 0 0 26px 13px #ccc;
+	padding: 1px 10px 0px;
+	margin:0px 35px 35px;
+}
+
+button[disabled]{
+	/*filter: blur(2px);*/
+	/*opacity:0.1;*/
+	background-color: #CcCcCc00;
+	box-shadow: 0 0 0px 0px #cccccc00, 0 0 0px 0px #cccccc00;
+	color: #ccc;
+	
 }
 
 .info{
 	color: #666;
     font-size: larger;
+    font-family: serif;
     text-align: center;
 }
 
-.err {
+.err{
 	color: white;
 	font-size: medium;
 }
 
-.info.mediaReq {
+.info.mediaReq{
     position: absolute;
     top: 50%;
     left: 50%;
@@ -61,7 +79,7 @@ button{
 	font-size: larger !important;	
 }
 
-div.main-content > .err {
+div.main-content > .err{
 	position: absolute;
     top: 50%;
     left: 50%;
@@ -90,7 +108,7 @@ div.main-content > .err {
 	mix-blend-mode: hard-light;
 }
 
-#form-wrapper {
+#form-wrapper{
     position: absolute;
     top: 50%;
     left: 50%;
@@ -101,13 +119,14 @@ div.main-content > .err {
 }
 #form-wrapper > .info{
 	display: block;
+	margin: 0px 0px 25px;
 }
-#form-wrapper > textarea{
+textarea, input[type="text"]{
 	display: block;
 	resize: none;
 	height: 25px;
 	padding-left: 6px;
-	margin: 20px auto 20px auto;
+	margin: 0px auto 45px auto;
 	font-family: sans-serif;
 	border-radius: 4px;
 	line-height: 25px;
@@ -116,40 +135,57 @@ div.main-content > .err {
 	width: 20%;
 	min-width: 150px;
 	max-width: 260px;
-}
-#form-wrapper > textarea::-webkit-input-placeholder{
-	color: #808080;
-	line-height: 25px;
-	font-family: sans-serif;
-	font-size: small;
-}
-#form-wrapper > textarea::-moz-placeholder{
-	color: #808080;
-	line-height: 25px;
-	font-family: sans-serif;
-	font-size: small;
-}
-#form-wrapper > textarea:-ms-input-placeholder{
-	color: #808080;
-	line-height: 25px;
-	font-family: sans-serif;
-	font-size: small;
-}
-#form-wrapper > textarea::-ms-input-placeholder{
-	color: #808080;
-	line-height: 25px;
-	font-family: sans-serif;
-	font-size: small;
-}
-#form-wrapper > textarea::placeholder{
-	color: #808080;
-	line-height: 25px;
-	font-family: sans-serif;
-	font-size: small;
+	-ms-overflow-style: none;
+	scrollbar-width: none;  
+	white-space: nowrap;
+	border: white solid 1px;
+	box-shadow: 0 0 5px 2px white, 0 0 26px 3px white;
 }
 
-#form-wrapper > textarea::-moz-selection { background: #808080; color: white }
-#form-wrapper > textarea::selection { background: #808080; color: white}
+textarea::-webkit-scrollbar, input[type="text"]::-webkit-scrollbar{
+  display: none;
+}
+
+textarea::-webkit-input-placeholder, input[type="text"]::-webkit-input-placeholder{
+	color: #808080;
+	line-height: 25px;
+	font-family: sans-serif;
+	font-size: small;
+}
+textarea::-moz-placeholder, input[type="text"]::-moz-placeholder{
+	color: #808080;
+	line-height: 25px;
+	font-family: sans-serif;
+	font-size: small;
+}
+textarea::-ms-input-placeholder, input[type="text"]::-ms-input-placeholder{
+	color: #808080;
+	line-height: 25px;
+	font-family: sans-serif;
+	font-size: small;
+}
+textarea::-ms-input-placeholder, input[type="text"]::-ms-input-placeholder{
+	color: #808080;
+	line-height: 25px;
+	font-family: sans-serif;
+	font-size: small;
+}
+textarea::placeholder, input[type="text"]::placeholder{
+	color: #808080;
+	line-height: 25px;
+	font-family: sans-serif;
+	font-size: small;
+}
+textarea::-moz-selection, input[type="text"]::-moz-selection{
+	background: #808080; color: white 
+}
+textarea::selection, input[type="text"]::selection{
+	background: #808080; color: white
+}
+
+textarea:focus, input:focus, button:focus{
+    outline: none;
+}
 
 #form-wrapper > .errors{
 	position: absolute;
@@ -158,16 +194,6 @@ div.main-content > .err {
 	    -ms-transform: translate(-50%,0);
 	        transform: translate(-50%,0);
 	margin-top: 20px;
-}
-
-#form-wrapper > button{	
-	margin: 0px 2% 0px 2%;	
-}
-
-#form-wrapper > button:focus, #form-wrapper > textarea:focus {
-  outline: none;
-  -webkit-box-shadow: none;
-          box-shadow: none;
 }
 
 .joining, .waiting{
@@ -204,11 +230,6 @@ canvas.scene{
     animation-name: example;
     animation-duration: 8s;
 }
-
-@-webkit-keyframes example{
-	from{-webkit-mask-position: 0px 200px}
-	to{-webkit-mask-position: 0px 400px;}
-}
 */
 #chatinterface_wrapper{
 	height: 100%;
@@ -225,13 +246,13 @@ canvas.scene{
     margin-bottom: 50px;
 }
 
-#chatinterface_wrapper button {
+#chatinterface_wrapper button{
     width: 160px;
     height: 45px;
     min-width: 100px;
 }
 
-.bottom > * {
+.bottom > *{
     -ms-flex-negative: 1;
         flex-shrink: 1;    
 }
@@ -243,23 +264,13 @@ canvas.scene{
 	margin-right:50px;
 }
 
-/*#chatinterface_wrapper > .toggleVolume{
-	display: block;
-	width: 222px;
-	height: 50px;
-	border: 2px solid red;
-}
-
-#chatinterface_wrapper > .toggleVolume[volume]{
-	border: 2px solid green;
-}*/
-
 .top{
 	margin-top:50px;
 }
 
 .top > .roomName{
 	display: inline-block;
+	font-family:serif;
     font-style: italic;
     font-size: xxx-large;
     color: white;
@@ -269,10 +280,10 @@ canvas.scene{
         -ms-transform: translate(0, -25%);
             transform: translate(0, -25%);
 }
-.top > .roomName::-moz-selection { color: #808080 }
-.top > .roomName::selection { color: #808080}
+.top > .roomName::-moz-selection{color: #808080 }
+.top > .roomName::selection{color: #808080}
 
-.top > .roomName:hover, .top > .toggleVolume, .bottom button{
+.top > .roomName:hover, .top > .toggleVolume, button{
 	cursor: pointer;
 }
 
@@ -284,21 +295,11 @@ canvas.scene{
 	-webkit-animation-fill-mode: forwards;
 }
 
-@-webkit-keyframes roomAnim {
-  from {
-    -webkit-filter: drop-shadow(0px 0px 3px #ffffffff);
-            filter: drop-shadow(0px 0px 3px #ffffffff);
-  }
-  to {
-    -webkit-filter: drop-shadow(0px 0px 5px #ffffff00);
-            filter: drop-shadow(0px 0px 5px #ffffff00);
-  }
-}
-
 .top > .toggleVolume{
 	margin-top: 15px;
     color: white;
     font-size: medium;
+    font-family: serif;
     -webkit-text-decoration-line: line-through;
             text-decoration-line: line-through;
 }
@@ -334,14 +335,6 @@ canvas.scene{
 	-webkit-animation-fill-mode: forwards;
 }
 
-@-webkit-keyframes fadeOut {
-  to {
-    opacity: 0.0;
-    -webkit-filter: blur(4px);
-            filter: blur(4px);
-  }
-}
-
 .fadeInHalf{
 	-webkit-animation-name: fadeInHalf;
 	-webkit-animation-duration:3s;
@@ -350,10 +343,36 @@ canvas.scene{
 	-webkit-animation-fill-mode: forwards;
 }
 
-@-webkit-keyframes fadeInHalf {
-  to {
-    opacity: 0.5;
-    -webkit-filter: blur(0px);
-            filter: blur(0px);
-  }
+.fadeOpacity{
+	-webkit-animation-name: fadeOpacityIn;
+	-webkit-animation-duration:1s;
+	-webkit-animation-iteration-count: 1;
+	-webkit-animation-timing-function: linear;
+	-webkit-animation-fill-mode: forwards;	
 }
+
+.animationIn{
+	-webkit-animation-direction: normal;
+}
+
+.animationOut{
+	-webkit-animation-direction: reverse; 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

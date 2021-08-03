@@ -1,0 +1,35 @@
+div.scheduler-wrapper
+	//- script.
+		//- window.rows = "dgfasd"
+		//- '!{JSON.stringify(rows)}' 
+		// no need to escape, user generated input doesnt make it back to client
+	script(src="/scripts/schedule_f.js")
+	link(rel='stylesheet' type='text/css' href='/css/schedule.css')
+	link(rel='stylesheet' type='text/css' href='/css/animations.css')
+	mixin date(day,time,seatsLeft)
+		if seatsLeft
+			li.date-item.col-5
+				p.date= day + ", "
+					br
+					|#{time}
+				p= "seats left : " + seatsLeft
+		else
+			li.date-item.col-5.full
+				p.date= day + ", "
+					br
+					|#{time}
+				p full
+	ul#schedule-table.row.justify-content-center
+		each row in rows
+			+date(row.day, row.time_CET, row.seatsLeft)
+			if rows.indexOf(row)%2==0&&rows.indexOf(row)!=rows.length-1
+				div.w-100
+	div.form-wrapper
+		div.inputs
+			input.name(type='text' placeholder="name")
+			input.email(type='text' placeholder="email")
+		div.button-wrapper
+			button.submit(type='button' disabled) submit
+			div.button-proxy
+		div#errBox
+			p(style='opacity:0 ') __

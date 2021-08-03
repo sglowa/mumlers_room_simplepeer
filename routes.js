@@ -11,6 +11,8 @@ module.exports = (app) => {
 	app.set('view engine','pug');
 	app.use(express.static(path.join(__dirname,'public')));		
 	app.use('/scripts',express.static(path.join(__dirname,'node_modules/videocontext/dist/')));	
+	app.use('/scripts',express.static(path.join(__dirname,'node_modules/bootstrap/dist/js/')));	
+	app.use('/css',express.static(path.join(__dirname,'node_modules/bootstrap/dist/css/')));
 
 	app.use(express.json());
 	app.get('/', (req,res)=>{
@@ -23,6 +25,17 @@ module.exports = (app) => {
 		})	
 	});
 
+	//red
+	app.get('/schedule', (req,res)=>{
+		fs.readdir(path.join(__dirname,'public/assets/logo'), (err, files)=>{
+			files = files.filter(f => {
+				return path.extname(f) === '.png'
+			});
+			const logo = files[Math.floor(Math.random()*files.length)];
+			res.render('index', {logo,extra:process.argv.slice(2)[0]});
+		})	
+	});
+
 	app.get('/form',(req,res)=>{
 		res.send(pug.renderFile('views/form.pug'));
 	});
@@ -30,6 +43,9 @@ module.exports = (app) => {
 	app.get('/chatInterface',(req,res)=>{
 		res.send(pug.renderFile('views/chat_interface.pug'));		
 	});
+
+	const {routeScheduler} = require('./schedule_src/schedule.js')
+	routeScheduler(app);
 
 	// join/create room via 'POST'
 	// app.post('/newRoom',(req,res)=>{		
