@@ -5,8 +5,10 @@
   "main": "app.js",
   "scripts": {
     "start": "browserify index.js -o ./public/bundle.js; node app",
-    "start_prod": "browserify index.js -o ./public/bundle.js & env-cmd -f .env.google pm2 start app.js --node-args='schedule' ",
-    "start_local": "browserify index.js -o ./public/bundle.js; browserify schedule_src/schedule_f.js -o ./public/scripts/schedule_f.js & env-cmd -f .env.google pm2 start app_local.js --time -- schedule ",
+    "start_prod": "browserify index.js -o ./public/bundle.js; pm2 start app.js --time ",
+    "start_prod_schedule": "browserify index.js -o ./public/bundle.js; browserify schedule_src/schedule_f.js -o ./public/scripts/schedule_f.js & env-cmd -f .env.google pm2 start app.js --time -- schedule  ",
+    "start_local": "browserify index.js -o ./public/bundle.js; node --inspect-brk app_local",
+    "start_local_schedule": "browserify index.js -o ./public/bundle.js; browserify schedule_src/schedule_f.js -o ./public/scripts/schedule_f.js & env-cmd -f .env.google pm2 start app_local.js --time -- schedule ",
     "start_local_dev": "watchify index.js -o ./public/bundle.js & env-cmd -f .env.google node --inspect-brk app_local",
     "start_local_dev_schedule": "browserify index.js -o ./public/bundle.js; watchify schedule_src/schedule_f.js -o ./public/scripts/schedule_f.js & env-cmd -f .env.google node --inspect-brk app_local schedule",
     "start_remote_test": "browserify index.js -o ./public/bundle.js & node app_test"
