@@ -30,7 +30,7 @@
     "simple-signal-client": "^3.0.0",
     "simple-signal-server": "^3.0.0",
     "socket.io": "^2.3.0",
-    "validator": "^13.1.17",
+    "validator": "^13.7.0",
     "videocontext": "^0.54.0"
   }
 }
