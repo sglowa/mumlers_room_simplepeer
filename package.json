@@ -24,7 +24,7 @@
     "express": "^4.17.1",
     "getusermedia": "^2.0.1",
     "httpolyglot": "^0.1.2",
-    "pm2": "^4.5.0",
+    "pm2": "^5.2.0",
     "pug": "^3.0.0",
     "simple-peer": "9.6.2",
     "simple-signal-client": "^3.0.0",
