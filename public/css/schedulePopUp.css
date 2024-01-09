@@ -19,7 +19,7 @@
 
 .popUpShadow{
 	filter: drop-shadow(20px 20px 60px orange) drop-shadow(40px 40px 100px red); 
-	transform: translate(0px,0px);4
+	transform: translate(0px,0px);
 }
 
 .modal-content > div {

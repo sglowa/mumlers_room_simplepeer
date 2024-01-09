@@ -13,8 +13,14 @@ module.exports = (app) => {
 	app.use('/scripts',express.static(path.join(__dirname,'node_modules/videocontext/dist/')));	
 	app.use('/scripts',express.static(path.join(__dirname,'node_modules/bootstrap/dist/js/')));	
 	app.use('/css',express.static(path.join(__dirname,'node_modules/bootstrap/dist/css/')));
-
+	// for JSON formatted data in POST requests
 	app.use(express.json());
+	// for redirecs https > https
+	app.enable('trust proxy');
+	app.use((req,res,next)=>{
+		req.secure ? next() : res.redirect('https://' + req.headers.host + req.url);
+	})
+
 	app.get('/', (req,res)=>{
 		fs.readdir(path.join(__dirname,'public/assets/logo'), (err, files)=>{
 			files = files.filter(f => {
