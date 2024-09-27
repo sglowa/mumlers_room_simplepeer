@@ -92,7 +92,7 @@ const constructInterfaceOnce = (signalClient,myStream,camFeedComp_audio,peersRef
 
 	leaveRoom.addEventListener('click',()=>{
 		signalClient.destroy();
-		location.reload();
+		location.reload(); // wtf is this ? undeclared ?
 	});
 };
 

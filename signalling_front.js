@@ -27,8 +27,6 @@ Member.prototype = {
 // ^^ callback for setter
 // ^^ obj for  
 
-
-
 // viagenie stun/turn config
 // let config  = {'iceServers': [
 // 				   { urls: ['stun:stun.l.google.com:19302']},
@@ -37,7 +35,6 @@ Member.prototype = {
 // 				    credential: 'testingtestint'}
 // 				    ]
 // 				};
-
 
 // xirsys stun/turn config 4
 // let config = {
