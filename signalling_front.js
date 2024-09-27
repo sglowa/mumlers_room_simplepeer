@@ -74,11 +74,12 @@ Member.prototype = {
 // };
 
 let config  = {'iceServers': [
-				   { urls: ['stun:157.230.114.158:3478']},
+					// this is host Public ID ? i think
+				   { urls: ['stun:165.232.85.81:3478']},
 				   { urls: [
-				   		'turn:157.230.114.158:3478?transport=udp',
-				   		'turn:157.230.114.158:3478?transport=tcp',
-				   		'turn:157.230.114.158:5349?transport=tcp',
+				   		'turn:165.232.85.81:3478?transport=udp',
+				   		'turn:165.232.85.81:3478?transport=tcp',
+				   		'turn:165.232.85.81:5349?transport=tcp',
 				   	], 
 				   	username: 'test',
 				    credential: 'test123'}
