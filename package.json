@@ -5,7 +5,9 @@
   "main": "app.js",
   "scripts": {
     "start": "browserify index.js -o ./public/bundle.js; node app",
+    "start_with_logs": "browserify index.js -o ./public/bundle.js; node --inspect=0.0.0.0:9229 app",
     "start_prod": "browserify index.js -o ./public/bundle.js; pm2 start app.js --time ",
+    "start_prod_with_logs": "browserify index.js -o ./public/bundle.js; pm2 start app.js --time --node-arguments=\"--inspect=0.0.0.0:9229\" ",
     "start_prod_schedule": "browserify index.js -o ./public/bundle.js; browserify schedule_src/schedule_f.js -o ./public/scripts/schedule_f.js & env-cmd -f .env.google pm2 start app.js --time -- schedule  ",
     "start_local": "browserify index.js -o ./public/bundle.js; node --inspect-brk app_local",
     "start_local_schedule": "browserify index.js -o ./public/bundle.js; browserify schedule_src/schedule_f.js -o ./public/scripts/schedule_f.js & env-cmd -f .env.google pm2 start app_local.js --time -- schedule ",
