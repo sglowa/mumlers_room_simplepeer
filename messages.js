@@ -1,3 +1,4 @@
+// this is client side ui messages
 const removeOnce = require('./helpers').removeOnce;
 
 const mediaReq = document.querySelector('span.mediaReq');

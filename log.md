@@ -102,3 +102,45 @@ something that sacrifices color and texture FOR less bandwidth use ...
  - max resolution 
  - room size 
  - throttiling ? (i'm not sure i can do it ?} 
+
+# 2024-09-27 18:04:30 : restoring server after digitalocean f-up
+
+need to redirect from www. - still needs to be handled (waiting for dns propagation to check if cname record is enough)
+
+the coturn seems to be configured correctly, now still need to run tests across couple of networks to make sure that turn is relaying (cause now it might just work via STUN)
+
+
+## switch to client-side rendering 
+now its rendered on the server with pug,
+which doesnt make much sense,
+i should use svelte and render it on the client. (serve compiled svelte js files)
+
+## disable un/disfunctinal ui 
+share screen, logs
+
+## add some monitoring tool both on client and on server
+on client to check how many tracks are transmitted (audio and video). And between whom, some mesh diagram or something. Socket connections and their status. 
+
+on server - the room+member list (manual rm room option ?)
+
+## things i should move to .env
+- the names and passwords of STUN/TURN (cause they are shared coturn (CLI), turnadmin (CLI), and config passed to SimpleSignalClient)
+- all the ports
+- whether we run locally or remotely (this not necessarily in .env but passed as env var in command)
+
+## ❗what's happening doubled audio track ? when mobile connects, an audio track from another peer gets doubled and played back to him, it seems 
+(its not regular feedback, cause when Gustar connected, only Vincent heard his sound doubled, i didn't)
+
+## ❗video stretched on mobile 
+i should add an option for clients to choose whether they want their vids to be stretched or no
+or an option to stretch all vids, available only from console (expose function)
+
+## the blending shader seems 'uneven'
+i felt like some streams were more 'pronounced' than others, but not sure, it looked more or less good with offfence.
+it might also be dependent on webcams ppl use... 
+and also vid compression that webrtc chooses... based on bandwidth
+
+## 
+
+
+

@@ -1,4 +1,5 @@
 /*jshint esversion:6*/
+// this is client side js 
 const helpers = require('./helpers');
 const messages = require('./messages');
 const constraints = {
