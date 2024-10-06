@@ -2,6 +2,54 @@
 // this is client side js 
 const helpers = require('./helpers');
 const messages = require('./messages');
+
+window.debugging = {};
+
+let selectedVideoDeviceID = localStorage.getItem("preferredVideoDeviceId") || undefined;
+debugging.selectedVideoDeviceID = localStorage.getItem("preferredVideoDeviceId") || undefined;
+/**
+ * Selects a video input device and stores the selection in localStorage.
+ * @returns {Promise<void>}
+ */
+async function selectVideoDevice() {
+    try {
+        // Get available video input devices
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+
+        if (videoDevices.length === 0) {
+            throw new Error("No video devices found.");
+        }
+
+        // Show available devices to the user (this could be a UI in a real app)
+        const selectedDeviceId = prompt(
+            "Select a video device by entering the index:\n" +
+            videoDevices.map((device, index) => `${index}: ${device.label || 'Unnamed device'}`).join('\n')
+        );
+
+        const selectedDevice = videoDevices[selectedDeviceId];
+        if (!selectedDevice) {
+            throw new Error("Invalid selection.");
+        }
+
+        // Use the selected device
+        // const stream = await navigator.mediaDevices.getUserMedia({
+            // video: { deviceId: { exact: selectedDevice.deviceId } }
+        // });
+
+		selectedVideoDeviceID = selectedDevice.deviceId
+
+		// Store the selected device in localStorage
+        localStorage.setItem("preferredVideoDeviceId", selectedDevice.deviceId);
+        console.log(`Selected device: ${selectedDevice.label}`);
+
+    } catch (error) {
+        console.error("Error selecting video device:", error);
+    }
+}
+window.debugging.selectVideoDevice = selectVideoDevice;
+
+/** @type {MediaStreamConstraints} constraints */
 const constraints = {
 	audio : true,
 	video : {
@@ -14,7 +62,10 @@ const constraints = {
 			ideal:320
 		},
 		framerate:18.00,
-		resizeMode:"crop-and-scale"
+		resizeMode:"crop-and-scale",
+		deviceId:{
+			ideal:selectedVideoDeviceID
+		}
 	}
 };
 
@@ -87,7 +138,6 @@ function reconnectOpts(roomName,socket){
 	})
 }
 
-window.debugging = {};
 
 /*
 flow:
