@@ -9,7 +9,7 @@
 
 /* for  SKALA thing*/
 div.bottom {
-	display: none;
+	display: none !important;
 }
 
 
