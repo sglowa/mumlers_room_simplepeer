@@ -1,14 +1,12 @@
 /*jshint esversion:6*/
 const fs = require('fs');
-const path = require('path');
-const pug = require('pug');
-
-const httpsLocalhost = require('https-localhost')();
-const httpolyglot = require('httpolyglot');
 const express = require('express');
-const app = express();
+const httpolyglot = require('httpolyglot');
+const pug = require('pug');
+const path = require('path');
 let io = require('socket.io');
-
+const app = express();
+const httpsLocalhost = require('https-localhost')();
 const port = process.env.PORT || 8080;
 require('./routes.js')(app);
 
@@ -26,7 +24,6 @@ httpsLocalhost.getCerts().then(certs=>{
 	signalling_b(io);
 
 })
-
 
 // ⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤
 // !!! GETTING THE ICE  
@@ -62,7 +59,6 @@ httpsLocalhost.getCerts().then(certs=>{
 // httpreq.on('error',e=>console.log('req error: ',e));
 // httpreq.end(console.log('request ended'));
 // ⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤⬤
-
 
 
 
