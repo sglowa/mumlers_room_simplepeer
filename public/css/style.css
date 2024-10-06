@@ -5,6 +5,15 @@
 * Browsers: last 4 version
 */
 
+
+
+/* for  SKALA thing*/
+div.bottom {
+	display: none;
+}
+
+
+
 body{
 	background:#808080;
 	/*min-width: 570px;*/
@@ -289,10 +298,15 @@ canvas.scene{
 
 .roomName.roomAnim{
 	-webkit-animation-name: roomAnim;
+	animation-name: roomAnim;
 	-webkit-animation-duration:3s;
+	animation-duration:3s;
 	-webkit-animation-iteration-count: 1;
+	animation-iteration-count: 1;
 	-webkit-animation-timing-function: linear;
+	animation-timing-function: linear;
 	-webkit-animation-fill-mode: forwards;
+	animation-fill-mode: forwards;
 }
 
 .top > .toggleVolume{
@@ -329,34 +343,51 @@ canvas.scene{
 
 .fadeOut{
 	-webkit-animation-name: fadeOut !important;
+	animation-name: fadeOut !important;
 	-webkit-animation-duration:3s;
+	animation-duration:3s;
 	-webkit-animation-iteration-count: 1;
+	animation-iteration-count: 1;
 	-webkit-animation-timing-function: linear;
+	animation-timing-function: linear;
 	-webkit-animation-fill-mode: forwards;
+	animation-fill-mode: forwards;
 }
 
 .fadeInHalf{
 	-webkit-animation-name: fadeInHalf;
+	animation-name: fadeInHalf;
 	-webkit-animation-duration:3s;
+	animation-duration:3s;
 	-webkit-animation-iteration-count: 1;
+	animation-iteration-count: 1;
 	-webkit-animation-timing-function: linear;
+	animation-timing-function: linear;
 	-webkit-animation-fill-mode: forwards;
+	animation-fill-mode: forwards;
 }
 
 .fadeOpacity{
 	-webkit-animation-name: fadeOpacityIn;
+	animation-name: fadeOpacityIn;
 	-webkit-animation-duration:1s;
+	animation-duration:1s;
 	-webkit-animation-iteration-count: 1;
+	animation-iteration-count: 1;
 	-webkit-animation-timing-function: linear;
+	animation-timing-function: linear;
 	-webkit-animation-fill-mode: forwards;	
+	animation-fill-mode: forwards;	
 }
 
 .animationIn{
 	-webkit-animation-direction: normal;
+	animation-direction: normal;
 }
 
 .animationOut{
 	-webkit-animation-direction: reverse; 
+	animation-direction: reverse; 
 }
 
 
